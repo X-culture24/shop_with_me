@@ -1,47 +1,95 @@
-import React, { useEffect, useState } from "react";
-import { ThemeProvider } from "@mui/material/styles";
-import { theme } from "./theme";
-import { Container, Typography, Button, Card, CardContent } from "@mui/material";
-import axios from "axios";
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { ThemeProvider } from '@mui/material/styles';
+import { CssBaseline } from '@mui/material';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
-interface Product {
-  id: number;
-  name: string;
-  price: number;
-  color: string;
-  status: string;
-}
+import { theme } from './theme/theme';
+import { AuthProvider } from './contexts/AuthContext';
+import Layout from './components/Layout/Layout';
+import Home from './pages/Home';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import Products from './pages/Products';
+import Cart from './pages/Cart';
+import Checkout from './pages/Checkout';
+import Profile from './pages/Profile';
+import ForgotPassword from './pages/ForgotPassword';
+import OTPVerification from './pages/OTPVerification';
+import FAQ from './pages/FAQ';
+import About from './pages/About';
+import Contact from './pages/Contact';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsOfService from './pages/TermsOfService';
+import AdminLogin from './pages/admin/AdminLogin';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import ProtectedRoute from './components/ProtectedRoute';
+import AdminRoute from './components/AdminRoute';
 
 function App() {
-  const [products, setProducts] = useState<Product[]>([]);
-
-  useEffect(() => {
-    axios.get("/api/products").then((res) => setProducts(res.data));
-  }, []);
-
   return (
     <ThemeProvider theme={theme}>
-      <Container>
-        <Typography variant="h4" gutterBottom>
-          Today's Deals
-        </Typography>
-        {products.map((p) => (
-          <Card key={p.id} sx={{ marginBottom: 2 }}>
-            <CardContent>
-              <Typography variant="h6">{p.name}</Typography>
-              <Typography>Price: KES {p.price}</Typography>
-              <Typography>Color: {p.color}</Typography>
-              <Typography>Status: {p.status}</Typography>
-              <Button variant="contained" color="secondary">
-                Buy Now
-              </Button>
-            </CardContent>
-          </Card>
-        ))}
-      </Container>
+      <CssBaseline />
+      <AuthProvider>
+        <Router>
+          <Layout>
+            <Routes>
+              {/* Public Routes */}
+              <Route path="/" element={<Home />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/products" element={<Products />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/verify-otp" element={<OTPVerification />} />
+              <Route path="/faq" element={<FAQ />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/privacy" element={<PrivacyPolicy />} />
+              <Route path="/terms" element={<TermsOfService />} />
+              
+              {/* Protected Routes */}
+              <Route path="/cart" element={
+                <ProtectedRoute>
+                  <Cart />
+                </ProtectedRoute>
+              } />
+              <Route path="/checkout" element={
+                <ProtectedRoute>
+                  <Checkout />
+                </ProtectedRoute>
+              } />
+              <Route path="/profile" element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              } />
+
+              {/* Admin Routes */}
+              <Route path="/admin/login" element={<AdminLogin />} />
+              <Route path="/admin/dashboard" element={
+                <AdminRoute>
+                  <AdminDashboard />
+                </AdminRoute>
+              } />
+            </Routes>
+          </Layout>
+          <ToastContainer
+            position="top-right"
+            autoClose={5000}
+            hideProgressBar={false}
+            newestOnTop={false}
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+            theme="light"
+          />
+        </Router>
+      </AuthProvider>
     </ThemeProvider>
   );
 }
 
 export default App;
-

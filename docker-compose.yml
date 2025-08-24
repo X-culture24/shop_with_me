@@ -26,13 +26,13 @@ services:
     image: postgres:15
     restart: always
     environment:
+      POSTGRES_DB: sakifarm
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_PASSWORD: password
       POSTGRES_DB: sakifarm
     ports:
       - "5432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 5s
       timeout: 5s
       retries: 5

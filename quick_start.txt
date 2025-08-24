@@ -1,0 +1,14 @@
+# Set your DigitalOcean token
+export DO_TOKEN="your_digitalocean_api_token"
+
+# Deploy to staging with visual effects
+./infrastructure/scripts/deploy.sh
+
+# Deploy to production
+./infrastructure/scripts/deploy.sh -e production
+
+# Monitor your infrastructure
+./infrastructure/scripts/monitor.sh -c
+
+# Run comprehensive tests
+cd testing/vagrant && vagrant up
