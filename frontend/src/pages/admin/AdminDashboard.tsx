@@ -30,9 +30,10 @@ import {
   MenuItem,
 } from '@mui/material';
 import {
+  Star,
   Dashboard,
-  ShoppingCart,
   People,
+  ShoppingCart,
   Inventory,
   AttachMoney,
   Edit,
@@ -43,7 +44,7 @@ import {
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { toast } from 'react-toastify';
-// import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import ProductForm from '../../components/admin/ProductForm';
 
 interface DashboardStats {
@@ -72,11 +73,12 @@ const AdminDashboard: React.FC = () => {
   const [users, setUsers] = useState<any[]>([]);
   const [productFormOpen, setProductFormOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
-  const [orderDetailOpen, setOrderDetailOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [orderDetailOpen, setOrderDetailOpen] = useState(false);
+
+  const [salesData, setSalesData] = useState<any[]>([]);
   const [selectedTab, setSelectedTab] = useState('overview');
   const [loading, setLoading] = useState(true);
-
 
   const handleAddProduct = () => {
     setEditingProduct(null);
@@ -99,7 +101,7 @@ const AdminDashboard: React.FC = () => {
         });
 
         if (response.ok) {
-          setProducts(products.filter((p: any) => p.id !== productId));
+          setProducts((prev) => prev.filter((p: any) => p.id !== productId));
           toast.success('Product deleted successfully');
         } else {
           toast.error('Failed to delete product');
@@ -112,12 +114,36 @@ const AdminDashboard: React.FC = () => {
 
   const handleSaveProduct = (savedProduct: any) => {
     if (editingProduct) {
-      setProducts(products.map((p: any) => p.id === savedProduct.id ? savedProduct : p));
+      setProducts((prev) => prev.map((p: any) => p.id === savedProduct.id ? savedProduct : p));
     } else {
-      setProducts([...products, savedProduct]);
+      setProducts((prev) => [...prev, savedProduct]);
     }
     setProductFormOpen(false);
     setEditingProduct(null);
+  };
+
+  const toggleFeatured = async (productId: number, featured: boolean) => {
+    try {
+      const response = await fetch(`/api/admin/products/${productId}/featured`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
+        },
+        body: JSON.stringify({ featured }),
+      });
+
+      if (response.ok) {
+        setProducts((prev) => prev.map((product: any) => 
+          product.id === productId ? { ...product, featured } : product
+        ));
+        toast.success(`Product ${featured ? 'added to' : 'removed from'} featured`);
+      } else {
+        toast.error('Failed to update featured status');
+      }
+    } catch (error) {
+      toast.error('Network error');
+    }
   };
 
   const updateOrderStatus = async (orderId: number, newStatus: string) => {
@@ -132,7 +158,7 @@ const AdminDashboard: React.FC = () => {
       });
 
       if (response.ok) {
-        setOrders(orders.map((order: any) => 
+        setOrders((prev) => prev.map((order: any) => 
           order.id === orderId ? { ...order, status: newStatus } : order
         ));
         toast.success('Order status updated successfully');
@@ -148,56 +174,146 @@ const AdminDashboard: React.FC = () => {
 
   useEffect(() => {
     fetchDashboardData();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('adminToken');
       
+      if (!token) {
+        console.error('No admin token found');
+        setLoading(false);
+        return;
+      }
+
+      console.log('Fetching dashboard data with token:', token.substring(0, 20) + '...');
+      
       // Fetch stats
-      const statsResponse = await fetch('/api/admin/stats', {
-        headers: { 'Authorization': `Bearer ${token}` }
+      const statsResponse = await fetch('http://localhost:8080/api/admin/stats', {
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
       });
+      
+      console.log('Stats response status:', statsResponse.status);
       if (statsResponse.ok) {
         const statsData = await statsResponse.json();
+        console.log('Stats data received:', statsData);
         setStats(statsData);
+      } else {
+        const errorText = await statsResponse.text();
+        console.error('Stats fetch failed:', statsResponse.status, errorText);
       }
 
       // Fetch orders
-      const ordersResponse = await fetch('/api/admin/orders', {
-        headers: { 'Authorization': `Bearer ${token}` }
+      const ordersResponse = await fetch('http://localhost:8080/api/admin/orders', {
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
       });
+      
+      console.log('Orders response status:', ordersResponse.status);
       if (ordersResponse.ok) {
         const ordersData = await ordersResponse.json();
-        setOrders(ordersData);
+        console.log('Orders data received:', ordersData);
+        setOrders(ordersData || []);
+        
+        // Generate sales data from orders
+        const salesByMonth = generateSalesData(ordersData || []);
+        setSalesData(salesByMonth);
+      } else {
+        const errorText = await ordersResponse.text();
+        console.error('Orders fetch failed:', ordersResponse.status, errorText);
+        setOrders([]);
+        setSalesData([]);
       }
 
       // Fetch products
-      const productsResponse = await fetch('/api/admin/products', {
-        headers: { 'Authorization': `Bearer ${token}` }
+      const productsResponse = await fetch('http://localhost:8080/api/admin/products', {
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
       });
+      
+      console.log('Products response status:', productsResponse.status);
       if (productsResponse.ok) {
         const productsData = await productsResponse.json();
-        setProducts(productsData);
+        console.log('Products data received:', productsData);
+        setProducts(productsData || []);
+      } else {
+        const errorText = await productsResponse.text();
+        console.error('Products fetch failed:', productsResponse.status, errorText);
+        setProducts([]);
       }
 
       // Fetch users
-      const usersResponse = await fetch('/api/admin/users', {
-        headers: { 'Authorization': `Bearer ${token}` }
+      const usersResponse = await fetch('http://localhost:8080/api/admin/users', {
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
       });
+      
+      console.log('Users response status:', usersResponse.status);
       if (usersResponse.ok) {
         const usersData = await usersResponse.json();
-        setUsers(usersData);
+        console.log('Users data received:', usersData);
+        setUsers(usersData || []);
+      } else {
+        const errorText = await usersResponse.text();
+        console.error('Users fetch failed:', usersResponse.status, errorText);
+        setUsers([]);
       }
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
-      toast.error('Failed to load dashboard data');
+      setStats({
+        totalOrders: 0,
+        totalRevenue: 0,
+        totalProducts: 0,
+        totalUsers: 0,
+        pendingOrders: 0,
+        lowStockProducts: 0,
+      });
+      setOrders([]);
+      setProducts([]);
+      setUsers([]);
+      setSalesData([]);
     } finally {
       setLoading(false);
     }
   };
 
+  const generateSalesData = (ordersData: any[]) => {
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const currentYear = new Date().getFullYear();
+    const salesByMonth: { [key: string]: { revenue: number, orders: number } } = {};
+    
+    // Initialize all months with 0
+    monthNames.forEach(month => {
+      salesByMonth[month] = { revenue: 0, orders: 0 };
+    });
+    
+    // Aggregate orders by month
+    ordersData.forEach((order: any) => {
+      const orderDate = new Date(order.created_at);
+      if (orderDate.getFullYear() === currentYear && order.status === 'delivered') {
+        const monthName = monthNames[orderDate.getMonth()];
+        salesByMonth[monthName].revenue += order.total_amount || 0;
+        salesByMonth[monthName].orders += 1;
+      }
+    });
+    
+    // Convert to array format for chart
+    return monthNames.map(month => ({
+      month,
+      revenue: salesByMonth[month].revenue,
+      orders: salesByMonth[month].orders
+    }));
+  };
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
@@ -263,6 +379,7 @@ const AdminDashboard: React.FC = () => {
             { id: 'overview', label: 'Overview', icon: <Dashboard /> },
             { id: 'orders', label: 'Orders', icon: <ShoppingCart /> },
             { id: 'products', label: 'Products', icon: <Inventory /> },
+            { id: 'featured', label: 'Featured Products', icon: <Star /> },
             { id: 'users', label: 'Users', icon: <People /> },
           ].map((tab) => (
             <Button
@@ -293,7 +410,7 @@ const AdminDashboard: React.FC = () => {
           <Grid item xs={12} sm={6} md={3}>
             <StatCard
               title="Total Revenue"
-              value={`$${stats.totalRevenue.toLocaleString()}`}
+              value={`KSh ${stats.totalRevenue.toLocaleString()}`}
               icon={<AttachMoney />}
               color="success.main"
             />
@@ -322,11 +439,20 @@ const AdminDashboard: React.FC = () => {
               <Typography variant="h6" gutterBottom>
                 Sales Overview
               </Typography>
-              <Box sx={{ height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: '#f5f5f5', borderRadius: 1 }}>
-                <Typography variant="body1" color="text.secondary">
-                  Sales Chart Placeholder - Install recharts for full functionality
-                </Typography>
-              </Box>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={salesData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip 
+                    formatter={(value, name) => [
+                      name === 'revenue' ? `KSh ${value.toLocaleString()}` : value,
+                      name === 'revenue' ? 'Revenue' : 'Orders'
+                    ]}
+                  />
+                  <Bar dataKey="revenue" fill="#1976d2" name="revenue" />
+                </BarChart>
+              </ResponsiveContainer>
             </Paper>
           </Grid>
 
@@ -362,11 +488,11 @@ const AdminDashboard: React.FC = () => {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {orders.slice(0, 5).map((order) => (
+                    {orders && orders.slice(0, 5).map((order) => (
                       <TableRow key={order.id}>
                         <TableCell>#{order.id}</TableCell>
                         <TableCell>{order.customerName}</TableCell>
-                        <TableCell>${order.total}</TableCell>
+                        <TableCell>KSh {order.total}</TableCell>
                         <TableCell>
                           <Chip
                             label={order.status}
@@ -418,7 +544,7 @@ const AdminDashboard: React.FC = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {orders.map((order) => (
+                {orders && orders.map((order) => (
                   <TableRow key={order.id}>
                     <TableCell>#{order.id}</TableCell>
                     <TableCell>{order.customerName}</TableCell>
@@ -489,14 +615,14 @@ const AdminDashboard: React.FC = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {products.map((product) => (
+                {products && products.map((product) => (
                   <TableRow key={product.id}>
                     <TableCell>
                       <Avatar src={product.image} variant="rounded" />
                     </TableCell>
                     <TableCell>{product.name}</TableCell>
                     <TableCell>{product.category}</TableCell>
-                    <TableCell>${product.price}</TableCell>
+                    <TableCell>KSh {product.price}</TableCell>
                     <TableCell>
                       <Chip
                         label={product.stock}
@@ -553,7 +679,7 @@ const AdminDashboard: React.FC = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {users.map((user) => (
+                {users && users.map((user) => (
                   <TableRow key={user.id}>
                     <TableCell>
                       <Box display="flex" alignItems="center" gap={2}>
@@ -568,10 +694,75 @@ const AdminDashboard: React.FC = () => {
                       {new Date(user.createdAt).toLocaleDateString()}
                     </TableCell>
                     <TableCell>{user.totalOrders}</TableCell>
-                    <TableCell>${user.totalSpent}</TableCell>
+                    <TableCell>KSh {user.totalSpent}</TableCell>
                     <TableCell>
                       <IconButton size="small">
                         <Visibility />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Paper>
+      )}
+
+      {/* Featured Products Tab */}
+      {selectedTab === 'featured' && (
+        <Paper sx={{ p: 3 }}>
+          <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+            <Typography variant="h6">Featured Products Management</Typography>
+            <Button
+              variant="contained"
+              startIcon={<Add />}
+              onClick={() => setProductFormOpen(true)}
+              sx={{ backgroundColor: '#1976d2' }}
+            >
+              Add Featured Product
+            </Button>
+          </Box>
+          <TableContainer>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Image</TableCell>
+                  <TableCell>Name</TableCell>
+                  <TableCell>Category</TableCell>
+                  <TableCell>Price</TableCell>
+                  <TableCell>Featured</TableCell>
+                  <TableCell>Actions</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {products && products.map((product) => (
+                  <TableRow key={product.id}>
+                    <TableCell>
+                      <Avatar src={product.image} variant="rounded" />
+                    </TableCell>
+                    <TableCell>{product.name}</TableCell>
+                    <TableCell>{product.category}</TableCell>
+                    <TableCell>KSh {product.price}</TableCell>
+                    <TableCell>
+                      <Chip
+                        label={product.featured ? 'Featured' : 'Not Featured'}
+                        color={product.featured ? 'success' : 'default'}
+                        size="small"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <IconButton 
+                        size="small" 
+                        onClick={() => toggleFeatured(product.id, !product.featured)}
+                        sx={{ color: '#1976d2' }}
+                      >
+                        <Star />
+                      </IconButton>
+                      <IconButton size="small" onClick={() => handleEditProduct(product)}>
+                        <Edit />
+                      </IconButton>
+                      <IconButton size="small" onClick={() => handleDeleteProduct(product.id)}>
+                        <Delete />
                       </IconButton>
                     </TableCell>
                   </TableRow>
@@ -606,20 +797,20 @@ const AdminDashboard: React.FC = () => {
               </Grid>
               <Grid item xs={12} md={6}>
                 <Typography variant="h6" gutterBottom>Order Summary</Typography>
-                <Typography><strong>Total Amount:</strong> ${selectedOrder.total}</Typography>
+                <Typography><strong>Total Amount:</strong> KSh {selectedOrder.total}</Typography>
                 <Typography><strong>Items:</strong> {selectedOrder.items?.length || 0}</Typography>
               </Grid>
               <Grid item xs={12}>
                 <Typography variant="h6" gutterBottom>Order Items</Typography>
                 <List>
-                  {selectedOrder.items?.map((item: any, index: number) => (
+                  {selectedOrder?.items?.map((item: any, index: number) => (
                     <ListItem key={index}>
                       <ListItemAvatar>
                         <Avatar src={item.image} variant="rounded" />
                       </ListItemAvatar>
                       <ListItemText
                         primary={item.name}
-                        secondary={`Quantity: ${item.quantity} × $${item.price}`}
+                        secondary={`Quantity: ${item.quantity} × KSh ${item.price}`}
                       />
                     </ListItem>
                   ))}

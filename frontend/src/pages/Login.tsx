@@ -69,6 +69,19 @@ const Login: React.FC = () => {
     setError('');
     try {
       await login(data);
+      
+      // Check if user is admin and redirect accordingly
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        const user = JSON.parse(storedUser);
+        if (user.role === 'admin') {
+          // Store admin token for admin routes
+          localStorage.setItem('adminToken', localStorage.getItem('token') || '');
+          localStorage.setItem('adminUser', storedUser);
+          navigate('/admin/dashboard');
+          return;
+        }
+      }
       navigate('/');
     } catch (err: any) {
       setError(err.response?.data?.error || 'Login failed');
@@ -100,6 +113,19 @@ const Login: React.FC = () => {
     setError('');
     try {
       await loginWithOTP({ ...data, purpose: 'login' });
+      
+      // Check if user is admin and redirect accordingly
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        const user = JSON.parse(storedUser);
+        if (user.role === 'admin') {
+          // Store admin token for admin routes
+          localStorage.setItem('adminToken', localStorage.getItem('token') || '');
+          localStorage.setItem('adminUser', storedUser);
+          navigate('/admin/dashboard');
+          return;
+        }
+      }
       navigate('/');
     } catch (err: any) {
       setError(err.response?.data?.error || 'OTP verification failed');

@@ -7,11 +7,14 @@ import 'react-toastify/dist/ReactToastify.css';
 
 import { theme } from './theme/theme';
 import { AuthProvider } from './contexts/AuthContext';
+import { CartProvider } from './contexts/CartContext';
 import Layout from './components/Layout/Layout';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Products from './pages/Products';
+import Categories from './pages/Categories';
+import ProductDetail from './pages/ProductDetail';
 import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
 import Profile from './pages/Profile';
@@ -32,7 +35,8 @@ function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <AuthProvider>
-        <Router>
+        <CartProvider>
+          <Router>
           <Layout>
             <Routes>
               {/* Public Routes */}
@@ -40,6 +44,8 @@ function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/products" element={<Products />} />
+              <Route path="/categories" element={<Categories />} />
+              <Route path="/products/:id" element={<ProductDetail />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/verify-otp" element={<OTPVerification />} />
               <Route path="/faq" element={<FAQ />} />
@@ -86,7 +92,8 @@ function App() {
             pauseOnHover
             theme="light"
           />
-        </Router>
+          </Router>
+        </CartProvider>
       </AuthProvider>
     </ThemeProvider>
   );

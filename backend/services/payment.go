@@ -2,6 +2,7 @@ package services
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -181,6 +182,15 @@ func (s *PaymentService) ProcessPaymentCallback(paymentMethod, transactionID str
 		s.db.Model(&models.Order{}).Where("id = ?", payment.OrderID).Update("payment_status", "paid")
 	} else {
 		payment.Status = "failed"
+		
+		// Restore inventory if payment failed
+		var order models.Order
+		if err := s.db.Preload("Items").First(&order, payment.OrderID).Error; err == nil {
+			for _, item := range order.Items {
+				s.db.Model(&models.Product{}).Where("id = ?", item.ProductID).
+					Update("stock", gorm.Expr("stock + ?", item.Quantity))
+			}
+		}
 	}
 
 	return s.db.Save(&payment).Error
@@ -231,7 +241,9 @@ func (s *PaymentService) initiateSTKPush(token, phoneNumber string, amount float
 	}
 
 	timestamp := time.Now().Format("20060102150405")
-	password := fmt.Sprintf("%s%s%s", s.mpesaShortcode, s.mpesaPasskey, timestamp)
+	// For sandbox, use base64 encoding of shortcode + passkey + timestamp
+	passwordStr := fmt.Sprintf("%s%s%s", s.mpesaShortcode, s.mpesaPasskey, timestamp)
+	password := base64.StdEncoding.EncodeToString([]byte(passwordStr))
 
 	request := MPesaSTKPushRequest{
 		BusinessShortCode: s.mpesaShortcode,
@@ -242,9 +254,9 @@ func (s *PaymentService) initiateSTKPush(token, phoneNumber string, amount float
 		PartyA:            phoneNumber,
 		PartyB:            s.mpesaShortcode,
 		PhoneNumber:       phoneNumber,
-		CallBackURL:       "https://your-domain.com/api/payments/mpesa/callback",
+		CallBackURL:       "http://localhost:8080/api/payments/mpesa/callback",
 		AccountReference:  reference,
-		TransactionDesc:   "Payment for order",
+		TransactionDesc:   "SakiFarm Order Payment",
 	}
 
 	jsonData, err := json.Marshal(request)
@@ -272,9 +284,17 @@ func (s *PaymentService) initiateSTKPush(token, phoneNumber string, amount float
 		return nil, err
 	}
 
+	// Log the response for debugging
+	fmt.Printf("M-Pesa STK Push Response: %s\n", string(body))
+
+	// Check if response is HTML (error page)
+	if resp.Header.Get("Content-Type") == "text/html" || resp.StatusCode != 200 {
+		return nil, fmt.Errorf("M-Pesa API error (status %d): %s", resp.StatusCode, string(body))
+	}
+
 	var stkResp MPesaSTKPushResponse
 	if err := json.Unmarshal(body, &stkResp); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to parse M-Pesa response: %v, body: %s", err, string(body))
 	}
 
 	return &stkResp, nil

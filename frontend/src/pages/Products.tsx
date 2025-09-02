@@ -2,33 +2,35 @@ import React, { useState, useEffect } from 'react';
 import {
   Box,
   Container,
+  Typography,
   Grid,
   Card,
   CardMedia,
   CardContent,
-  Typography,
   Button,
   TextField,
-  InputAdornment,
-  Chip,
-  Rating,
-  IconButton,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
+  Chip,
+  InputAdornment,
+  IconButton,
   Skeleton,
+  Rating,
 } from '@mui/material';
 import {
   Search,
-  FavoriteOutlined,
-  Favorite,
-  ShoppingCart,
   FilterList,
+  ShoppingCart,
+  Favorite,
+  FavoriteOutlined,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { Product } from '../types';
+import { useCart } from '../contexts/CartContext';
 import api from '../services/api';
 import ModernPagination from '../components/common/ModernPagination';
 
@@ -39,13 +41,14 @@ const Products: React.FC = () => {
   const [sortBy, setSortBy] = useState('name');
   const [filterCategory, setFilterCategory] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const { addToCart } = useCart();
   const [totalPages, setTotalPages] = useState(1);
   const [wishlist, setWishlist] = useState<number[]>([]);
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchProducts();
-  }, [currentPage, sortBy, filterCategory, searchTerm]);
+  }, [currentPage, sortBy, filterCategory, searchTerm]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchProducts = async () => {
     setLoading(true);
@@ -76,9 +79,9 @@ const Products: React.FC = () => {
     );
   };
 
-  const addToCart = (product: Product) => {
-    // Add to cart logic here
-    console.log('Added to cart:', product);
+  const handleAddToCart = (product: Product) => {
+    addToCart(product, 1);
+    toast.success(`${product.name} added to cart!`);
   };
 
   const ProductCard = ({ product }: { product: Product }) => (
@@ -106,7 +109,11 @@ const Products: React.FC = () => {
           <CardMedia
             component="img"
             height="200"
-            image={product.images?.[0]?.url || '/placeholder-product.jpg'}
+            image={
+              typeof product.images?.[0] === 'string' 
+                ? product.images[0] 
+                : product.images?.[0]?.url || '/placeholder-product.jpg'
+            }
             alt={product.name}
           />
           <IconButton
@@ -177,11 +184,11 @@ const Products: React.FC = () => {
               startIcon={<ShoppingCart />}
               onClick={(e) => {
                 e.stopPropagation();
-                addToCart(product);
+                handleAddToCart(product);
               }}
               sx={{
                 borderRadius: 2,
-                background: 'linear-gradient(45deg, #FF1493 30%, #000080 90%)',
+                backgroundColor: '#1976d2',
               }}
             >
               Add

@@ -30,11 +30,13 @@ import {
   ShoppingBag,
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
+import { useCart } from '../../contexts/CartContext';
 import { useNavigate } from 'react-router-dom';
 import { colors } from '../../theme/theme';
 
 const Header: React.FC = () => {
   const { user, isAuthenticated, isAdmin, logout } = useAuth();
+  const { getCartItemsCount } = useCart();
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -67,7 +69,7 @@ const Header: React.FC = () => {
         { label: 'Profile', path: '/profile', icon: <Person /> },
         { label: 'Orders', path: '/orders', icon: <ShoppingBag /> },
         { label: 'Wishlist', path: '/wishlist', icon: <Favorite /> },
-        ...(isAdmin ? [{ label: 'Admin Dashboard', path: '/admin', icon: <Dashboard /> }] : []),
+        ...(isAdmin ? [{ label: 'Admin Dashboard', path: '/admin/dashboard', icon: <Dashboard /> }] : []),
       ]
     : [];
 
@@ -135,11 +137,10 @@ const Header: React.FC = () => {
 
             {/* Cart */}
             <IconButton
-              color="inherit"
               onClick={() => navigate('/cart')}
               sx={{ color: 'white' }}
             >
-              <Badge badgeContent={0} color="error">
+              <Badge badgeContent={getCartItemsCount()} color="error">
                 <ShoppingCart />
               </Badge>
             </IconButton>

@@ -287,9 +287,9 @@ const Register: React.FC = () => {
                 fontSize: '1.1rem',
                 fontWeight: 'bold',
                 borderRadius: 2,
-                background: 'linear-gradient(45deg, #FF1493 30%, #000080 90%)',
+                backgroundColor: '#1976d2',
                 '&:hover': {
-                  background: 'linear-gradient(45deg, #FF1493 60%, #000080 100%)',
+                  backgroundColor: '#1565c0',
                 },
               }}
             >

@@ -17,6 +17,8 @@ import {
   Chip,
   Alert,
   CircularProgress,
+  Checkbox,
+  FormControlLabel,
 } from '@mui/material';
 import {
   CloudUpload,
@@ -34,12 +36,14 @@ interface Product {
   category: string;
   stock: number;
   images: string[];
-  tags: string[];
+  tags: string[] | string;
   sku: string;
   weight?: number;
   dimensions?: string;
   brand?: string;
   status: 'active' | 'inactive' | 'draft';
+  is_imported?: boolean;
+  shipping_fee?: number;
 }
 
 interface ProductFormProps {
@@ -68,10 +72,13 @@ const ProductForm: React.FC<ProductFormProps> = ({
     dimensions: '',
     brand: '',
     status: 'active',
+    is_imported: false,
+    shipping_fee: 0,
   });
   const [newTag, setNewTag] = useState('');
   const [loading, setLoading] = useState(false);
   const [imageUploading, setImageUploading] = useState(false);
+  const [imageUrl, setImageUrl] = useState('');
 
   const categories = [
     'Electronics',
@@ -88,7 +95,14 @@ const ProductForm: React.FC<ProductFormProps> = ({
 
   useEffect(() => {
     if (product) {
-      setFormData(product);
+      setFormData({
+        ...product,
+        tags: typeof product.tags === 'string' 
+          ? (product.tags as string).split(',').filter((tag: string) => tag.trim() !== '') 
+          : Array.isArray(product.tags) 
+            ? product.tags 
+            : [],
+      });
     } else {
       setFormData({
         name: '',
@@ -103,6 +117,8 @@ const ProductForm: React.FC<ProductFormProps> = ({
         dimensions: '',
         brand: '',
         status: 'active',
+        is_imported: false,
+        shipping_fee: 0,
       });
     }
   }, [product, open]);
@@ -171,7 +187,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
     if (newTag.trim() && !formData.tags.includes(newTag.trim())) {
       setFormData(prev => ({
         ...prev,
-        tags: [...prev.tags, newTag.trim()],
+        tags: [...(Array.isArray(prev.tags) ? prev.tags : []), newTag.trim()],
       }));
       setNewTag('');
     }
@@ -180,8 +196,19 @@ const ProductForm: React.FC<ProductFormProps> = ({
   const handleRemoveTag = (tagToRemove: string) => {
     setFormData(prev => ({
       ...prev,
-      tags: prev.tags.filter(tag => tag !== tagToRemove),
+      tags: Array.isArray(prev.tags) ? prev.tags.filter(tag => tag !== tagToRemove) : [],
     }));
+  };
+
+  const handleAddImageUrl = () => {
+    if (imageUrl.trim() && !formData.images.includes(imageUrl.trim())) {
+      setFormData(prev => ({
+        ...prev,
+        images: [...prev.images, imageUrl.trim()],
+      }));
+      setImageUrl('');
+      toast.success('Image URL added successfully');
+    }
   };
 
   const handleSubmit = async () => {
@@ -202,7 +229,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
         method,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },
         body: JSON.stringify(formData),
       });
@@ -376,6 +403,38 @@ const ProductForm: React.FC<ProductFormProps> = ({
             />
           </Grid>
 
+          {/* Shipping Information */}
+          <Grid item xs={12}>
+            <Typography variant="h6" gutterBottom color="primary">
+              Shipping Information
+            </Typography>
+          </Grid>
+
+          <Grid item xs={12} sm={6}>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={formData.is_imported || false}
+                  onChange={(e) => handleInputChange('is_imported', e.target.checked)}
+                />
+              }
+              label="Imported Product (requires shipping)"
+            />
+          </Grid>
+
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              label="Shipping Fee (KES)"
+              type="number"
+              value={formData.shipping_fee}
+              onChange={(e) => handleInputChange('shipping_fee', parseFloat(e.target.value) || 0)}
+              inputProps={{ min: 0, step: 0.01 }}
+              disabled={!formData.is_imported}
+              helperText={formData.is_imported ? "Additional shipping charge for imported products" : "Only imported products have shipping fees"}
+            />
+          </Grid>
+
           {/* Images */}
           <Grid item xs={12}>
             <Typography variant="h6" gutterBottom color="primary">
@@ -397,10 +456,31 @@ const ProductForm: React.FC<ProductFormProps> = ({
                   component="span"
                   startIcon={imageUploading ? <CircularProgress size={20} /> : <CloudUpload />}
                   disabled={imageUploading}
+                  sx={{ mr: 2 }}
                 >
                   {imageUploading ? 'Uploading...' : 'Upload Images'}
                 </Button>
               </label>
+            </Box>
+
+            <Box display="flex" gap={1} mb={2}>
+              <TextField
+                fullWidth
+                label="Or add image URL"
+                value={imageUrl}
+                onChange={(e) => setImageUrl(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleAddImageUrl()}
+                placeholder="https://example.com/image.jpg"
+                size="small"
+              />
+              <Button
+                variant="outlined"
+                onClick={handleAddImageUrl}
+                startIcon={<Add />}
+                disabled={!imageUrl.trim()}
+              >
+                Add URL
+              </Button>
             </Box>
 
             {formData.images.length > 0 && (
@@ -463,7 +543,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
             </Box>
 
             <Box display="flex" flexWrap="wrap" gap={1}>
-              {formData.tags.map((tag) => (
+              {Array.isArray(formData.tags) && formData.tags.map((tag) => (
                 <Chip
                   key={tag}
                   label={tag}

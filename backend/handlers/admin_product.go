@@ -31,6 +31,8 @@ type ProductRequest struct {
 	Dimensions  string   `json:"dimensions"`
 	Brand       string   `json:"brand"`
 	Status      string   `json:"status" binding:"required,oneof=active inactive draft"`
+	IsImported  bool     `json:"is_imported"`
+	ShippingFee float64  `json:"shipping_fee" binding:"min=0"`
 }
 
 // GetProducts retrieves all products for admin
@@ -56,7 +58,7 @@ func (h *AdminProductHandler) GetProducts(c *gin.Context) {
 		query = query.Where("name ILIKE ? OR description ILIKE ?", "%"+search+"%", "%"+search+"%")
 	}
 	
-	if err := query.Find(&products).Error; err != nil {
+	if err := query.Preload("Images").Find(&products).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch products"})
 		return
 	}
@@ -97,12 +99,30 @@ func (h *AdminProductHandler) CreateProduct(c *gin.Context) {
 		Dimensions:  req.Dimensions,
 		Brand:       req.Brand,
 		Status:      req.Status,
+		IsImported:  req.IsImported,
+		ShippingFee: req.ShippingFee,
 	}
 	
 	if err := h.db.Create(&product).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create product"})
 		return
 	}
+	
+	// Create product images if provided
+	for i, imageURL := range req.Images {
+		if imageURL != "" {
+			productImage := models.ProductImage{
+				ProductID: product.ID,
+				URL:       imageURL,
+				AltText:   product.Name,
+				IsPrimary: i == 0, // First image is primary
+			}
+			h.db.Create(&productImage)
+		}
+	}
+	
+	// Load images for response
+	h.db.Preload("Images").First(&product, product.ID)
 	
 	c.JSON(http.StatusCreated, product)
 }
@@ -163,6 +183,28 @@ func (h *AdminProductHandler) UpdateProduct(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update product"})
 		return
 	}
+	
+	// Update product images if provided
+	if len(req.Images) > 0 {
+		// Delete existing images
+		h.db.Where("product_id = ?", productID).Delete(&models.ProductImage{})
+		
+		// Create new images
+		for i, imageURL := range req.Images {
+			if imageURL != "" {
+				productImage := models.ProductImage{
+					ProductID: product.ID,
+					URL:       imageURL,
+					AltText:   product.Name,
+					IsPrimary: i == 0, // First image is primary
+				}
+				h.db.Create(&productImage)
+			}
+		}
+	}
+	
+	// Load images for response
+	h.db.Preload("Images").First(&product, product.ID)
 	
 	c.JSON(http.StatusOK, product)
 }
@@ -271,4 +313,42 @@ func (h *AdminProductHandler) GetProductStats(c *gin.Context) {
 		Scan(&stats.Categories)
 	
 	c.JSON(http.StatusOK, stats)
+}
+
+// ToggleFeatured toggles the featured status of a product
+func (h *AdminProductHandler) ToggleFeatured(c *gin.Context) {
+	productID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid product ID"})
+		return
+	}
+	
+	var req struct {
+		Featured bool `json:"featured"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	
+	var product models.Product
+	if err := h.db.First(&product, productID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
+		return
+	}
+	
+	product.Featured = req.Featured
+	if err := h.db.Save(&product).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update featured status"})
+		return
+	}
+	
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Featured status updated successfully",
+		"featured": product.Featured,
+	})
 }

@@ -35,6 +35,7 @@ func main() {
 		&models.CartItem{},
 		&models.Wishlist{},
 		&models.Review{},
+		&models.ReviewLike{},
 		&models.OTP{},
 		&models.Payment{},
 		&models.Notification{},
@@ -56,6 +57,9 @@ func main() {
 	productHandler := handlers.NewProductHandler(db)
 	orderHandler := handlers.NewOrderHandler(db, paymentService, emailService, pdfService)
 	adminProductHandler := handlers.NewAdminProductHandler(db)
+	adminDashboardHandler := handlers.NewAdminDashboardHandler(db)
+	reviewHandler := handlers.NewReviewHandler(db)
+	
 	// Create payment handler config
 	paymentConfig := &handlers.Config{
 		MPesaConsumerKey:    cfg.MPesaConsumerKey,
@@ -102,13 +106,11 @@ func main() {
 			auth.POST("/reset-password", authHandler.ResetPassword)
 		}
 
-		// Public product routes
-		products := api.Group("/products")
-		{
-			products.GET("", productHandler.GetProducts)
-			products.GET("/:id", productHandler.GetProduct)
-			products.GET("/categories", productHandler.GetCategories)
-		}
+		// Products
+		api.GET("/products", productHandler.GetProducts)
+		api.GET("/products/:id", productHandler.GetProduct)
+		api.GET("/products/:id/reviews", reviewHandler.GetProductReviews)
+		api.GET("/categories", productHandler.GetCategories)
 
 		// Payment callbacks (public for webhook access)
 		payments := api.Group("/payments")
@@ -144,12 +146,32 @@ func main() {
 			payments.POST("/mobile", paymentHandler.InitiateMobilePayment)
 			payments.GET("/status/:transaction_id", paymentHandler.GetPaymentStatus)
 		}
+
+		// Review routes
+		reviews := protected.Group("/products")
+		{
+			reviews.POST("/:id/reviews", reviewHandler.CreateReview)
+			reviews.PUT("/reviews/:id", reviewHandler.UpdateReview)
+			reviews.DELETE("/reviews/:id", reviewHandler.DeleteReview)
+		}
+
+		// Review interaction routes
+		reviewActions := protected.Group("/reviews")
+		{
+			reviewActions.POST("/:id/like", reviewHandler.LikeReview)
+		}
 	}
 
 	// Admin routes
 	adminGroup := protected.Group("/admin")
 	adminGroup.Use(middleware.AdminMiddleware())
 	{
+		// Dashboard routes
+		adminGroup.GET("/stats", adminDashboardHandler.GetStats)
+		adminGroup.GET("/orders", adminDashboardHandler.GetOrders)
+		adminGroup.GET("/users", adminDashboardHandler.GetUsers)
+		adminGroup.PUT("/orders/:id/status", adminDashboardHandler.UpdateOrderStatus)
+		
 		// Product management routes
 		adminGroup.GET("/products", adminProductHandler.GetProducts)
 		adminGroup.POST("/products", adminProductHandler.CreateProduct)
@@ -157,9 +179,7 @@ func main() {
 		adminGroup.DELETE("/products/:id", adminProductHandler.DeleteProduct)
 		adminGroup.POST("/products/upload-image", adminProductHandler.UploadProductImage)
 		adminGroup.GET("/products/stats", adminProductHandler.GetProductStats)
-		
-		// Order management
-		adminGroup.PUT("/orders/:id/status", orderHandler.UpdateOrderStatus)
+		adminGroup.PUT("/products/:id/featured", adminProductHandler.ToggleFeatured)
 	}
 
 	// Create default admin user if not exists

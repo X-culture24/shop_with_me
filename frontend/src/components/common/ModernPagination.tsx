@@ -93,7 +93,7 @@ const ModernPagination: React.FC<ModernPaginationProps> = ({
           fontWeight: 600,
           fontSize: size === 'small' ? '0.875rem' : '1rem',
           background: isActive
-            ? 'linear-gradient(135deg, #FF1493 0%, #000080 100%)'
+            ? '#1976d2'
             : 'transparent',
           color: isActive ? 'white' : theme.palette.text.primary,
           border: `2px solid ${
@@ -101,7 +101,7 @@ const ModernPagination: React.FC<ModernPaginationProps> = ({
           }`,
           '&:hover': {
             background: isActive
-              ? 'linear-gradient(135deg, #FF1493 0%, #000080 100%)'
+              ? '#1565c0'
               : alpha(theme.palette.primary.main, 0.1),
             borderColor: theme.palette.primary.main,
             transform: 'translateY(-1px)',

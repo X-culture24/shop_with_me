@@ -246,6 +246,87 @@ const Home: React.FC = () => {
                   <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
                     Search Products
                   </Typography>
+                  
+                  {/* Shopping Images and Sample Products around Search */}
+                  <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2, gap: 1, flexWrap: 'wrap' }}>
+                    <Box
+                      component="img"
+                      src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=60&h=60&fit=crop&crop=center"
+                      alt="Shopping bag"
+                      sx={{ width: 40, height: 40, borderRadius: '50%', opacity: 0.8, border: '2px solid rgba(255,255,255,0.3)' }}
+                    />
+                    <Box
+                      component="img"
+                      src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=60&h=60&fit=crop&crop=center"
+                      alt="Headphones"
+                      sx={{ width: 40, height: 40, borderRadius: '50%', opacity: 0.8, border: '2px solid rgba(255,255,255,0.3)' }}
+                    />
+                    <Box
+                      component="img"
+                      src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=60&h=60&fit=crop&crop=center"
+                      alt="Shoes"
+                      sx={{ width: 40, height: 40, borderRadius: '50%', opacity: 0.8, border: '2px solid rgba(255,255,255,0.3)' }}
+                    />
+                    <Box
+                      component="img"
+                      src="https://images.unsplash.com/photo-1472851294608-062f824d29cc?w=60&h=60&fit=crop&crop=center"
+                      alt="Shopping cart"
+                      sx={{ width: 40, height: 40, borderRadius: '50%', opacity: 0.8, border: '2px solid rgba(255,255,255,0.3)' }}
+                    />
+                    <Box
+                      component="img"
+                      src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=60&h=60&fit=crop&crop=center"
+                      alt="Watch"
+                      sx={{ width: 40, height: 40, borderRadius: '50%', opacity: 0.8, border: '2px solid rgba(255,255,255,0.3)' }}
+                    />
+                    <Box
+                      component="img"
+                      src="https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=60&h=60&fit=crop&crop=center"
+                      alt="Products"
+                      sx={{ width: 40, height: 40, borderRadius: '50%', opacity: 0.8, border: '2px solid rgba(255,255,255,0.3)' }}
+                    />
+                    <Box
+                      component="img"
+                      src="https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=60&h=60&fit=crop&crop=center"
+                      alt="iPhone"
+                      sx={{ width: 40, height: 40, borderRadius: '50%', opacity: 0.8, border: '2px solid rgba(255,255,255,0.3)' }}
+                    />
+                    <Box
+                      component="img"
+                      src="https://images.unsplash.com/photo-1541643600914-78b084683601?w=60&h=60&fit=crop&crop=center"
+                      alt="Perfume"
+                      sx={{ width: 40, height: 40, borderRadius: '50%', opacity: 0.8, border: '2px solid rgba(255,255,255,0.3)' }}
+                    />
+                    <Box
+                      component="img"
+                      src="https://images.unsplash.com/photo-1541807084-5c52b6b3adef?w=60&h=60&fit=crop&crop=center"
+                      alt="Laptop"
+                      sx={{ width: 40, height: 40, borderRadius: '50%', opacity: 0.8, border: '2px solid rgba(255,255,255,0.3)' }}
+                    />
+                    <Box
+                      component="img"
+                      src="https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?w=60&h=60&fit=crop&crop=center"
+                      alt="Samsung Phone"
+                      sx={{ width: 40, height: 40, borderRadius: '50%', opacity: 0.8, border: '2px solid rgba(255,255,255,0.3)' }}
+                    />
+                    <Box
+                      component="img"
+                      src="https://images.unsplash.com/photo-1594035910387-fea47794261f?w=60&h=60&fit=crop&crop=center"
+                      alt="Men's Fragrance"
+                      sx={{ width: 40, height: 40, borderRadius: '50%', opacity: 0.8, border: '2px solid rgba(255,255,255,0.3)' }}
+                    />
+                    <Box
+                      component="img"
+                      src="https://images.unsplash.com/photo-1588405748880-12d1d2a59d75?w=60&h=60&fit=crop&crop=center"
+                      alt="Women's Perfume"
+                      sx={{ width: 40, height: 40, borderRadius: '50%', opacity: 0.8, border: '2px solid rgba(255,255,255,0.3)' }}
+                    />
+                  </Box>
+                  
+                  <Typography variant="body2" sx={{ textAlign: 'center', mb: 2, opacity: 0.8 }}>
+                    Electronics • Fashion • Beauty • Sports • Wholesale • More
+                  </Typography>
+                  
                   <TextField
                     fullWidth
                     placeholder="What are you looking for?"
@@ -339,6 +420,211 @@ const Home: React.FC = () => {
           ))}
         </Grid>
       </Container>
+
+      {/* Product Categories Showcase */}
+      <Box sx={{ backgroundColor: '#f8f9fa', py: 6 }}>
+        <Container maxWidth="lg">
+          <Typography
+            variant="h4"
+            align="center"
+            sx={{
+              mb: 4,
+              fontWeight: 700,
+              color: colors.darkBlue,
+            }}
+          >
+            Shop by Category
+          </Typography>
+          <Grid container spacing={3}>
+            <Grid item xs={6} sm={4} md={2}>
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+              >
+                <Card
+                  sx={{
+                    textAlign: 'center',
+                    p: 2,
+                    cursor: 'pointer',
+                    '&:hover': {
+                      transform: 'translateY(-5px)',
+                      boxShadow: '0 8px 25px rgba(0,0,0,0.15)',
+                    },
+                    transition: 'all 0.3s ease',
+                  }}
+                  onClick={() => navigate('/products?category=Electronics')}
+                >
+                  <Box
+                    component="img"
+                    src="https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=120&h=120&fit=crop&crop=center"
+                    alt="Smartphones"
+                    sx={{ width: 80, height: 80, borderRadius: 2, mb: 1, objectFit: 'cover' }}
+                  />
+                  <Typography variant="body2" fontWeight={600}>
+                    Smartphones
+                  </Typography>
+                </Card>
+              </motion.div>
+            </Grid>
+            <Grid item xs={6} sm={4} md={2}>
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+              >
+                <Card
+                  sx={{
+                    textAlign: 'center',
+                    p: 2,
+                    cursor: 'pointer',
+                    '&:hover': {
+                      transform: 'translateY(-5px)',
+                      boxShadow: '0 8px 25px rgba(0,0,0,0.15)',
+                    },
+                    transition: 'all 0.3s ease',
+                  }}
+                  onClick={() => navigate('/products?category=Electronics')}
+                >
+                  <Box
+                    component="img"
+                    src="https://images.unsplash.com/photo-1541807084-5c52b6b3adef?w=120&h=120&fit=crop&crop=center"
+                    alt="Laptops"
+                    sx={{ width: 80, height: 80, borderRadius: 2, mb: 1, objectFit: 'cover' }}
+                  />
+                  <Typography variant="body2" fontWeight={600}>
+                    Laptops
+                  </Typography>
+                </Card>
+              </motion.div>
+            </Grid>
+            <Grid item xs={6} sm={4} md={2}>
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+              >
+                <Card
+                  sx={{
+                    textAlign: 'center',
+                    p: 2,
+                    cursor: 'pointer',
+                    '&:hover': {
+                      transform: 'translateY(-5px)',
+                      boxShadow: '0 8px 25px rgba(0,0,0,0.15)',
+                    },
+                    transition: 'all 0.3s ease',
+                  }}
+                  onClick={() => navigate('/products?category=Health & Beauty')}
+                >
+                  <Box
+                    component="img"
+                    src="https://images.unsplash.com/photo-1541643600914-78b084683601?w=120&h=120&fit=crop&crop=center"
+                    alt="Perfumes"
+                    sx={{ width: 80, height: 80, borderRadius: 2, mb: 1, objectFit: 'cover' }}
+                  />
+                  <Typography variant="body2" fontWeight={600}>
+                    Perfumes
+                  </Typography>
+                </Card>
+              </motion.div>
+            </Grid>
+            <Grid item xs={6} sm={4} md={2}>
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5, delay: 0.4 }}
+              >
+                <Card
+                  sx={{
+                    textAlign: 'center',
+                    p: 2,
+                    cursor: 'pointer',
+                    '&:hover': {
+                      transform: 'translateY(-5px)',
+                      boxShadow: '0 8px 25px rgba(0,0,0,0.15)',
+                    },
+                    transition: 'all 0.3s ease',
+                  }}
+                  onClick={() => navigate('/products?category=Electronics')}
+                >
+                  <Box
+                    component="img"
+                    src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=120&h=120&fit=crop&crop=center"
+                    alt="Headphones"
+                    sx={{ width: 80, height: 80, borderRadius: 2, mb: 1, objectFit: 'cover' }}
+                  />
+                  <Typography variant="body2" fontWeight={600}>
+                    Headphones
+                  </Typography>
+                </Card>
+              </motion.div>
+            </Grid>
+            <Grid item xs={6} sm={4} md={2}>
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5, delay: 0.5 }}
+              >
+                <Card
+                  sx={{
+                    textAlign: 'center',
+                    p: 2,
+                    cursor: 'pointer',
+                    '&:hover': {
+                      transform: 'translateY(-5px)',
+                      boxShadow: '0 8px 25px rgba(0,0,0,0.15)',
+                    },
+                    transition: 'all 0.3s ease',
+                  }}
+                  onClick={() => navigate('/products?category=Clothing')}
+                >
+                  <Box
+                    component="img"
+                    src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=120&h=120&fit=crop&crop=center"
+                    alt="Sneakers"
+                    sx={{ width: 80, height: 80, borderRadius: 2, mb: 1, objectFit: 'cover' }}
+                  />
+                  <Typography variant="body2" fontWeight={600}>
+                    Sneakers
+                  </Typography>
+                </Card>
+              </motion.div>
+            </Grid>
+            <Grid item xs={6} sm={4} md={2}>
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5, delay: 0.6 }}
+              >
+                <Card
+                  sx={{
+                    textAlign: 'center',
+                    p: 2,
+                    cursor: 'pointer',
+                    '&:hover': {
+                      transform: 'translateY(-5px)',
+                      boxShadow: '0 8px 25px rgba(0,0,0,0.15)',
+                    },
+                    transition: 'all 0.3s ease',
+                  }}
+                  onClick={() => navigate('/products?category=Electronics')}
+                >
+                  <Box
+                    component="img"
+                    src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=120&h=120&fit=crop&crop=center"
+                    alt="Watches"
+                    sx={{ width: 80, height: 80, borderRadius: 2, mb: 1, objectFit: 'cover' }}
+                  />
+                  <Typography variant="body2" fontWeight={600}>
+                    Watches
+                  </Typography>
+                </Card>
+              </motion.div>
+            </Grid>
+          </Grid>
+        </Container>
+      </Box>
 
       {/* Featured Products */}
       <Box sx={{ backgroundColor: 'white', py: 8 }}>
@@ -505,6 +791,179 @@ const Home: React.FC = () => {
               View All Products
             </Button>
           </Box>
+        </Container>
+      </Box>
+
+      {/* Promotional Banner with Product Images */}
+      <Box sx={{ backgroundColor: colors.darkBlue, py: 6, position: 'relative', overflow: 'hidden' }}>
+        <Container maxWidth="lg">
+          <Grid container spacing={4} alignItems="center">
+            <Grid item xs={12} md={6}>
+              <Typography
+                variant="h4"
+                sx={{
+                  color: 'white',
+                  fontWeight: 700,
+                  mb: 2,
+                }}
+              >
+                Wholesale Products Available
+              </Typography>
+              <Typography
+                variant="h6"
+                sx={{
+                  color: 'rgba(255,255,255,0.9)',
+                  mb: 3,
+                  fontWeight: 300,
+                }}
+              >
+                Premium quality products at wholesale prices. Perfect for retailers and bulk buyers.
+              </Typography>
+              <Button
+                variant="contained"
+                size="large"
+                onClick={() => navigate('/products')}
+                sx={{
+                  backgroundColor: colors.blue,
+                  color: 'white',
+                  px: 4,
+                  py: 1.5,
+                  fontSize: '1.1rem',
+                  fontWeight: 600,
+                  '&:hover': {
+                    backgroundColor: 'white',
+                    color: colors.darkBlue,
+                  },
+                }}
+              >
+                Shop Wholesale
+              </Button>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, justifyContent: 'center' }}>
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.6, delay: 0.1 }}
+                >
+                  <Box
+                    component="img"
+                    src="https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=150&h=150&fit=crop&crop=center"
+                    alt="iPhone 15 Pro Max"
+                    sx={{ 
+                      width: 120, 
+                      height: 120, 
+                      borderRadius: 3, 
+                      border: '3px solid rgba(255,255,255,0.3)',
+                      objectFit: 'cover',
+                      '&:hover': { transform: 'scale(1.05)' },
+                      transition: 'transform 0.3s ease'
+                    }}
+                  />
+                </motion.div>
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.6, delay: 0.2 }}
+                >
+                  <Box
+                    component="img"
+                    src="https://images.unsplash.com/photo-1541807084-5c52b6b3adef?w=150&h=150&fit=crop&crop=center"
+                    alt="MacBook Pro M3"
+                    sx={{ 
+                      width: 120, 
+                      height: 120, 
+                      borderRadius: 3, 
+                      border: '3px solid rgba(255,255,255,0.3)',
+                      objectFit: 'cover',
+                      '&:hover': { transform: 'scale(1.05)' },
+                      transition: 'transform 0.3s ease'
+                    }}
+                  />
+                </motion.div>
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.6, delay: 0.3 }}
+                >
+                  <Box
+                    component="img"
+                    src="https://images.unsplash.com/photo-1541643600914-78b084683601?w=150&h=150&fit=crop&crop=center"
+                    alt="Premium Perfumes"
+                    sx={{ 
+                      width: 120, 
+                      height: 120, 
+                      borderRadius: 3, 
+                      border: '3px solid rgba(255,255,255,0.3)',
+                      objectFit: 'cover',
+                      '&:hover': { transform: 'scale(1.05)' },
+                      transition: 'transform 0.3s ease'
+                    }}
+                  />
+                </motion.div>
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.6, delay: 0.4 }}
+                >
+                  <Box
+                    component="img"
+                    src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=150&h=150&fit=crop&crop=center"
+                    alt="Sony Headphones"
+                    sx={{ 
+                      width: 120, 
+                      height: 120, 
+                      borderRadius: 3, 
+                      border: '3px solid rgba(255,255,255,0.3)',
+                      objectFit: 'cover',
+                      '&:hover': { transform: 'scale(1.05)' },
+                      transition: 'transform 0.3s ease'
+                    }}
+                  />
+                </motion.div>
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.6, delay: 0.5 }}
+                >
+                  <Box
+                    component="img"
+                    src="https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?w=150&h=150&fit=crop&crop=center"
+                    alt="Samsung Galaxy S24"
+                    sx={{ 
+                      width: 120, 
+                      height: 120, 
+                      borderRadius: 3, 
+                      border: '3px solid rgba(255,255,255,0.3)',
+                      objectFit: 'cover',
+                      '&:hover': { transform: 'scale(1.05)' },
+                      transition: 'transform 0.3s ease'
+                    }}
+                  />
+                </motion.div>
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.6, delay: 0.6 }}
+                >
+                  <Box
+                    component="img"
+                    src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=150&h=150&fit=crop&crop=center"
+                    alt="Nike Air Jordan"
+                    sx={{ 
+                      width: 120, 
+                      height: 120, 
+                      borderRadius: 3, 
+                      border: '3px solid rgba(255,255,255,0.3)',
+                      objectFit: 'cover',
+                      '&:hover': { transform: 'scale(1.05)' },
+                      transition: 'transform 0.3s ease'
+                    }}
+                  />
+                </motion.div>
+              </Box>
+            </Grid>
+          </Grid>
         </Container>
       </Box>
     </Box>

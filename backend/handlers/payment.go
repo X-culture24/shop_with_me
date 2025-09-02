@@ -232,7 +232,7 @@ func (h *PaymentHandler) initiateMPesaPayment(payment *Payment) error {
 		PartyA:            payment.PhoneNumber,
 		PartyB:            h.config.MPesaShortcode,
 		PhoneNumber:       payment.PhoneNumber,
-		CallBackURL:       "https://your-domain.com/api/payments/mpesa/callback",
+		CallBackURL:       "http://localhost:8080/api/payments/mpesa/callback",
 		AccountReference:  payment.Reference,
 		TransactionDesc:   "SakiFarm Payment",
 	}

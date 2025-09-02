@@ -26,6 +26,8 @@ export interface Product {
   status: 'active' | 'inactive';
   rating?: number;
   review_count?: number;
+  is_imported?: boolean;
+  shipping_fee?: number;
   createdAt: Date;
   updatedAt: Date;
   created_at: string;

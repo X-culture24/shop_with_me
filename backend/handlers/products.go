@@ -107,6 +107,28 @@ func (h *ProductHandler) CreateProduct(c *gin.Context) {
 	})
 }
 
+// GetProduct gets a single product by ID
+func (h *ProductHandler) GetProduct(c *gin.Context) {
+	productIDStr := c.Param("id")
+	productID, err := strconv.ParseUint(productIDStr, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid product ID"})
+		return
+	}
+
+	var product models.Product
+	if err := h.db.Preload("Images").First(&product, productID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch product"})
+		return
+	}
+
+	c.JSON(http.StatusOK, product)
+}
+
 func (h *ProductHandler) GetProducts(c *gin.Context) {
 	var products []models.Product
 	
@@ -152,25 +174,6 @@ func (h *ProductHandler) GetProducts(c *gin.Context) {
 	})
 }
 
-func (h *ProductHandler) GetProduct(c *gin.Context) {
-	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid product ID"})
-		return
-	}
-
-	var product models.Product
-	if err := h.db.Preload("Images").First(&product, id).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
-			return
-		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch product"})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"product": product})
-}
 
 func (h *ProductHandler) UpdateProduct(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 32)

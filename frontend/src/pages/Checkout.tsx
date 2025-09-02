@@ -26,6 +26,7 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import PaymentMethods from '../components/PaymentMethods';
 import { toast } from 'react-toastify';
+import { useCart } from '../contexts/CartContext';
 
 interface CheckoutFormData {
   firstName: string;
@@ -45,6 +46,7 @@ const Checkout: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [orderData, setOrderData] = useState<CheckoutFormData | null>(null);
   const navigate = useNavigate();
+  const { cartItems, getCartTotal, getDeliveryFee } = useCart();
 
   const {
     register,
@@ -82,7 +84,10 @@ const Checkout: React.FC = () => {
         },
         body: JSON.stringify({
           shippingAddress: orderData,
-          items: [], // This should come from cart context
+          items: cartItems,
+          subtotal,
+          deliveryFee,
+          total,
         }),
       });
 
@@ -109,11 +114,14 @@ const Checkout: React.FC = () => {
     toast.error(`Payment failed: ${error}`);
   };
 
+  const subtotal = getCartTotal();
+  const deliveryFee = getDeliveryFee();
+  const total = subtotal + deliveryFee;
+
   const orderSummary = {
-    subtotal: 18499,
-    shipping: 0,
-    tax: 2959.84,
-    total: 21458.84,
+    subtotal,
+    deliveryFee,
+    total,
   };
 
   const ShippingForm = () => (
@@ -296,7 +304,7 @@ const Checkout: React.FC = () => {
                   size="large"
                   disabled={loading}
                   sx={{
-                    background: 'linear-gradient(45deg, #FF1493 30%, #000080 90%)',
+                    backgroundColor: '#1976d2',
                   }}
                 >
                   {activeStep === steps.length - 1
@@ -329,15 +337,21 @@ const Checkout: React.FC = () => {
               <Typography>KSh {orderSummary.subtotal.toLocaleString()}</Typography>
             </Box>
 
-            <Box display="flex" justifyContent="space-between" mb={1}>
-              <Typography>Shipping:</Typography>
-              <Typography color="success.main">FREE</Typography>
-            </Box>
+            {orderSummary.deliveryFee > 0 && (
+              <Box display="flex" justifyContent="space-between" mb={1}>
+                <Typography>Delivery Fee (Imported Products):</Typography>
+                <Typography>KSh {orderSummary.deliveryFee.toLocaleString()}</Typography>
+              </Box>
+            )}
 
-            <Box display="flex" justifyContent="space-between" mb={2}>
-              <Typography>Tax (16%):</Typography>
-              <Typography>KSh {orderSummary.tax.toLocaleString()}</Typography>
-            </Box>
+            {orderSummary.deliveryFee > 0 && (
+              <Box display="flex" alignItems="center" color="text.secondary" mb={2}>
+                <LocalShipping sx={{ mr: 1, fontSize: 16 }} />
+                <Typography variant="body2">
+                  Delivery fees apply to imported products only
+                </Typography>
+              </Box>
+            )}
 
             <Divider sx={{ my: 2 }} />
 

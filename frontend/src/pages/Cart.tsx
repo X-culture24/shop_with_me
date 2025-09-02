@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import {
   Box,
   Container,
@@ -24,100 +24,29 @@ import {
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { CartItem } from '../types';
+import { useCart } from '../contexts/CartContext';
 
 const Cart: React.FC = () => {
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { cartItems, updateQuantity, removeFromCart, getCartTotal, getDeliveryFee } = useCart();
 
-  useEffect(() => {
-    // Fetch cart items from API
-    fetchCartItems();
-  }, []);
-
-  const fetchCartItems = async () => {
-    // Mock data for now
-    setCartItems([
-      {
-        id: 1,
-        product: {
-          id: 1,
-          name: 'Premium Wireless Headphones',
-          price: 15999,
-          images: [{ id: 1, product_id: 1, url: '/placeholder-product.jpg', alt_text: 'Headphones', is_primary: true, created_at: new Date().toISOString() }],
-          category: { 
-            id: 1, 
-            name: 'Electronics', 
-            description: 'Electronic devices and gadgets', 
-            image: '', 
-            children: [], 
-            is_active: true, 
-            created_at: new Date().toISOString(), 
-            updated_at: new Date().toISOString() 
-          },
-          description: 'High-quality wireless headphones',
-          stock: 10,
-          status: 'active',
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-        quantity: 2,
-        price: 15999,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      },
-      {
-        id: 2,
-        product: {
-          id: 2,
-          name: 'Organic Coffee Beans',
-          price: 2500,
-          images: [{ id: 2, product_id: 2, url: '/placeholder-product.jpg', alt_text: 'Coffee', is_primary: true, created_at: new Date().toISOString() }],
-          category: { 
-            id: 2, 
-            name: 'Food & Beverages', 
-            description: 'Food and beverage products', 
-            image: '', 
-            children: [], 
-            is_active: true, 
-            created_at: new Date().toISOString(), 
-            updated_at: new Date().toISOString() 
-          },
-          description: 'Premium organic coffee beans',
-          stock: 25,
-          status: 'active',
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-        quantity: 1,
-        price: 2500,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      },
-    ]);
+  const handleUpdateQuantity = (itemId: number, newQuantity: number) => {
+    const item = cartItems.find(item => item.id === itemId);
+    if (item) {
+      updateQuantity(item.product.id, newQuantity);
+    }
   };
 
-  const updateQuantity = (itemId: number, newQuantity: number) => {
-    if (newQuantity < 1) return;
-    setCartItems(prev =>
-      prev.map(item =>
-        item.id === itemId ? { ...item, quantity: newQuantity } : item
-      )
-    );
+  const handleRemoveItem = (itemId: number) => {
+    const item = cartItems.find(item => item.id === itemId);
+    if (item) {
+      removeFromCart(item.product.id);
+    }
   };
 
-  const removeItem = (itemId: number) => {
-    setCartItems(prev => prev.filter(item => item.id !== itemId));
-  };
-
-  const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-  const shipping = subtotal > 5000 ? 0 : 500;
-  const tax = subtotal * 0.16; // 16% VAT
-  const total = subtotal + shipping + tax;
+  const subtotal = getCartTotal();
+  const deliveryFee = getDeliveryFee();
+  const total = subtotal + deliveryFee;
 
   const CartItemCard = ({ item }: { item: CartItem }) => (
     <motion.div
@@ -157,7 +86,7 @@ const Cart: React.FC = () => {
               <Box display="flex" alignItems="center" gap={1}>
                 <IconButton
                   size="small"
-                  onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                  onClick={() => handleUpdateQuantity(item.id, item.quantity - 1)}
                   disabled={item.quantity <= 1}
                 >
                   <Remove />
@@ -165,13 +94,13 @@ const Cart: React.FC = () => {
                 <TextField
                   size="small"
                   value={item.quantity}
-                  onChange={(e) => updateQuantity(item.id, parseInt(e.target.value) || 1)}
+                  onChange={(e) => handleUpdateQuantity(item.id, parseInt(e.target.value) || 1)}
                   sx={{ width: 60 }}
                   inputProps={{ min: 1, style: { textAlign: 'center' } }}
                 />
                 <IconButton
                   size="small"
-                  onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                  onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}
                 >
                   <Add />
                 </IconButton>
@@ -180,7 +109,7 @@ const Cart: React.FC = () => {
             <Grid item xs={12} sm={1}>
               <IconButton
                 color="error"
-                onClick={() => removeItem(item.id)}
+                onClick={() => handleRemoveItem(item.id)}
               >
                 <Delete />
               </IconButton>
@@ -206,7 +135,7 @@ const Cart: React.FC = () => {
           onClick={() => navigate('/products')}
           sx={{
             borderRadius: 2,
-            background: 'linear-gradient(45deg, #FF1493 30%, #000080 90%)',
+            backgroundColor: '#1976d2',
           }}
         >
           Continue Shopping
@@ -256,17 +185,12 @@ const Cart: React.FC = () => {
               <Typography>KSh {subtotal.toLocaleString()}</Typography>
             </Box>
             
-            <Box display="flex" justifyContent="space-between" mb={1}>
-              <Typography>Shipping:</Typography>
-              <Typography color={shipping === 0 ? 'success.main' : 'inherit'}>
-                {shipping === 0 ? 'FREE' : `KSh ${shipping.toLocaleString()}`}
-              </Typography>
-            </Box>
-            
-            <Box display="flex" justifyContent="space-between" mb={2}>
-              <Typography>Tax (16%):</Typography>
-              <Typography>KSh {tax.toLocaleString()}</Typography>
-            </Box>
+            {deliveryFee > 0 && (
+              <Box display="flex" justifyContent="space-between" mb={1}>
+                <Typography>Delivery Fee (Imported Products):</Typography>
+                <Typography>KSh {deliveryFee.toLocaleString()}</Typography>
+              </Box>
+            )}
             
             <Divider sx={{ my: 2 }} />
             
@@ -279,9 +203,9 @@ const Cart: React.FC = () => {
               </Typography>
             </Box>
 
-            {shipping > 0 && (
+            {deliveryFee > 0 && (
               <Typography variant="body2" color="text.secondary" mb={2}>
-                Add KSh {(5000 - subtotal).toLocaleString()} more for free shipping
+                Delivery fees apply to imported products only
               </Typography>
             )}
 
@@ -291,13 +215,13 @@ const Cart: React.FC = () => {
               size="large"
               startIcon={<ShoppingCartCheckout />}
               onClick={() => navigate('/checkout')}
-              disabled={loading}
+              disabled={cartItems.length === 0}
               sx={{
                 py: 1.5,
                 borderRadius: 2,
-                background: 'linear-gradient(45deg, #FF1493 30%, #000080 90%)',
+                backgroundColor: '#1976d2',
                 '&:hover': {
-                  background: 'linear-gradient(45deg, #FF1493 60%, #000080 100%)',
+                  backgroundColor: '#1565c0',
                 },
               }}
             >

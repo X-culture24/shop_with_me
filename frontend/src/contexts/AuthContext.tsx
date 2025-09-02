@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User, AuthResponse } from '../types';
+import { User } from '../types';
 import { authApi } from '../services/api';
 
 interface AuthContextType {
@@ -53,13 +53,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const login = async (credentials: { identifier: string; password: string }) => {
     try {
-      const response = await authApi.login(credentials);
+      const response = await authApi.login({ identifier: credentials.identifier, password: credentials.password });
       const { token: newToken, user: newUser } = response.data;
 
       setToken(newToken);
       setUser(newUser);
       localStorage.setItem('token', newToken);
       localStorage.setItem('user', JSON.stringify(newUser));
+      
+      // If user is admin, also set admin token
+      if (newUser.role === 'admin') {
+        localStorage.setItem('adminToken', newToken);
+        localStorage.setItem('adminUser', JSON.stringify(newUser));
+      }
     } catch (error) {
       throw error;
     }
@@ -74,6 +80,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setUser(newUser);
       localStorage.setItem('token', newToken);
       localStorage.setItem('user', JSON.stringify(newUser));
+      
+      // If user is admin, also set admin token
+      if (newUser.role === 'admin') {
+        localStorage.setItem('adminToken', newToken);
+        localStorage.setItem('adminUser', JSON.stringify(newUser));
+      }
     } catch (error) {
       throw error;
     }

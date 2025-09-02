@@ -40,6 +40,9 @@ type Product struct {
 	Weight      float64   `json:"weight"`
 	Dimensions  string    `json:"dimensions"`
 	Tags        string    `json:"tags"`
+	IsImported  bool      `gorm:"default:false" json:"is_imported"`
+	ShippingFee float64   `gorm:"default:0" json:"shipping_fee"`
+	Featured    bool      `gorm:"default:false" json:"featured"`
 	Rating      float64   `gorm:"default:0" json:"rating"`
 	ReviewCount int       `gorm:"default:0" json:"review_count"`
 	CreatedAt   time.Time `json:"created_at"`
@@ -138,16 +141,17 @@ type Wishlist struct {
 
 // Review represents product reviews
 type Review struct {
-	ID        uint    `gorm:"primaryKey" json:"id"`
-	UserID    uint    `json:"user_id"`
-	User      User    `gorm:"foreignKey:UserID" json:"user"`
-	ProductID uint    `json:"product_id"`
-	Product   Product `gorm:"foreignKey:ProductID" json:"product"`
-	Rating    int     `json:"rating" validate:"required,min=1,max=5"`
-	Comment   string  `json:"comment"`
-	IsVerified bool   `gorm:"default:false" json:"is_verified"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID         uint      `gorm:"primaryKey" json:"id"`
+	UserID     uint      `json:"user_id"`
+	User       User      `gorm:"foreignKey:UserID" json:"user"`
+	ProductID  uint      `json:"product_id"`
+	Product    Product   `gorm:"foreignKey:ProductID" json:"product"`
+	Rating     int       `json:"rating" validate:"required,min=1,max=5"`
+	Comment    string    `json:"comment" validate:"required"`
+	IsVerified bool      `gorm:"default:false" json:"is_verified"`
+	LikesCount int       `gorm:"default:0" json:"likes_count"`
+	CreatedAt  time.Time `json:"created_at"`
+	UpdatedAt  time.Time `json:"updated_at"`
 }
 
 // OTP represents one-time passwords for authentication
@@ -201,6 +205,16 @@ type Category struct {
 	IsActive    bool      `gorm:"default:true" json:"is_active"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
+}
+
+
+// ReviewLike represents review likes/dislikes
+type ReviewLike struct {
+	ID       uint `gorm:"primaryKey" json:"id"`
+	UserID   uint `json:"user_id"`
+	ReviewID uint `json:"review_id"`
+	IsLike   bool `json:"is_like"` // true for like, false for dislike
+	CreatedAt time.Time `json:"created_at"`
 }
 
 // Coupon represents discount coupons
