@@ -163,6 +163,7 @@ func main() {
 		reviewActions := protected.Group("/reviews")
 		{
 			reviewActions.POST("/:id/like", reviewHandler.LikeReview)
+			reviewActions.POST("/:id/reply", reviewHandler.ReplyToReview)
 		}
 
 		// Cart routes

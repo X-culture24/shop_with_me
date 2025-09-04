@@ -35,6 +35,7 @@ import { toast } from 'react-toastify';
 import { Product, Review } from '../types';
 import api from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
+import { useCart } from '../contexts/CartContext';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -61,6 +62,7 @@ const ProductDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { addToCart, loading: cartLoading } = useCart();
   
   const [product, setProduct] = useState<Product | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -72,6 +74,8 @@ const ProductDetail: React.FC = () => {
   const [reviewText, setReviewText] = useState('');
   const [reviewRating, setReviewRating] = useState(5);
   const [submittingReview, setSubmittingReview] = useState(false);
+  const [replyingTo, setReplyingTo] = useState<number | null>(null);
+  const [replyText, setReplyText] = useState('');
 
   useEffect(() => {
     if (id) {
@@ -104,8 +108,7 @@ const ProductDetail: React.FC = () => {
 
   const handleAddToCart = () => {
     if (!product) return;
-    // Add to cart logic
-    toast.success(`Added ${quantity} ${product.name}(s) to cart`);
+    addToCart(product, quantity);
   };
 
   const handleQuantityChange = (change: number) => {
@@ -156,6 +159,45 @@ const ProductDetail: React.FC = () => {
     } catch (error) {
       toast.error(`Failed to ${action} review`);
     }
+  };
+
+  const handleReplyClick = (reviewId: number) => {
+    if (!user) {
+      toast.error('Please login to reply to reviews');
+      return;
+    }
+    setReplyingTo(reviewId);
+    setReplyText('');
+  };
+
+  const handleSubmitReply = async (reviewId: number) => {
+    if (!user) {
+      toast.error('Please login to reply to reviews');
+      return;
+    }
+
+    if (!replyText.trim()) {
+      toast.error('Please write a reply');
+      return;
+    }
+
+    try {
+      await api.post(`/reviews/${reviewId}/reply`, {
+        comment: replyText,
+      });
+      
+      setReplyingTo(null);
+      setReplyText('');
+      fetchReviews(); // Refresh reviews to show the new reply
+      toast.success('Reply submitted successfully');
+    } catch (error) {
+      toast.error('Failed to submit reply');
+    }
+  };
+
+  const handleCancelReply = () => {
+    setReplyingTo(null);
+    setReplyText('');
   };
 
   if (loading) {
@@ -303,14 +345,14 @@ const ProductDetail: React.FC = () => {
                 size="large"
                 startIcon={<ShoppingCart />}
                 onClick={handleAddToCart}
-                disabled={product.stock === 0}
+                disabled={product.stock === 0 || cartLoading}
                 sx={{
                   flex: 1,
                   backgroundColor: '#1976d2',
                   borderRadius: 2,
                 }}
               >
-                Add to Cart
+                {cartLoading ? 'Adding...' : 'Add to Cart'}
               </Button>
               <IconButton
                 onClick={() => setIsWishlisted(!isWishlisted)}
@@ -422,10 +464,72 @@ const ProductDetail: React.FC = () => {
                     <Button
                       size="small"
                       startIcon={<Reply />}
+                      onClick={() => handleReplyClick(review.id)}
                     >
                       Reply
                     </Button>
                   </Box>
+                  
+                  {/* Display Replies */}
+                  {review.replies && review.replies.length > 0 && (
+                    <Box mt={2} ml={4}>
+                      {review.replies.map((reply) => (
+                        <Card key={reply.id} sx={{ mb: 2, p: 2, bgcolor: 'grey.50' }}>
+                          <Box display="flex" alignItems="center" gap={2} mb={1}>
+                            <Avatar sx={{ bgcolor: 'secondary.main', width: 32, height: 32 }}>
+                              {reply.user.first_name?.[0] || 'U'}
+                            </Avatar>
+                            <Box>
+                              <Typography variant="subtitle2" fontWeight="bold">
+                                {reply.user.first_name} {reply.user.last_name}
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary">
+                                {new Date(reply.created_at).toLocaleDateString()}
+                              </Typography>
+                            </Box>
+                          </Box>
+                          <Typography variant="body2" sx={{ ml: 5 }}>
+                            {reply.comment}
+                          </Typography>
+                        </Card>
+                      ))}
+                    </Box>
+                  )}
+
+                  {/* Reply Form */}
+                  {replyingTo === review.id && (
+                    <Box mt={2} p={2} bgcolor="grey.50" borderRadius={1}>
+                      <Typography variant="body2" color="text.secondary" mb={1}>
+                        Replying to {review.user.first_name}
+                      </Typography>
+                      <TextField
+                        fullWidth
+                        multiline
+                        rows={3}
+                        placeholder="Write your reply..."
+                        value={replyText}
+                        onChange={(e) => setReplyText(e.target.value)}
+                        sx={{ mb: 2 }}
+                      />
+                      <Box display="flex" gap={1}>
+                        <Button
+                          variant="contained"
+                          size="small"
+                          onClick={() => handleSubmitReply(review.id)}
+                          disabled={!replyText.trim()}
+                        >
+                          Submit Reply
+                        </Button>
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          onClick={handleCancelReply}
+                        >
+                          Cancel
+                        </Button>
+                      </Box>
+                    </Box>
+                  )}
                 </Card>
               ))
             )}

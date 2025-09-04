@@ -44,11 +44,31 @@ const Products: React.FC = () => {
   const { addToCart } = useCart();
   const [totalPages, setTotalPages] = useState(1);
   const [wishlist, setWishlist] = useState<number[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchProducts();
+    fetchCategories();
+  }, []);
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      fetchProducts();
+    }, searchTerm ? 500 : 0); // Debounce search by 500ms
+
+    return () => clearTimeout(timeoutId);
   }, [currentPage, sortBy, filterCategory, searchTerm]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const fetchCategories = async () => {
+    try {
+      const response = await api.get('/categories');
+      setCategories(response.data.categories?.map((cat: any) => cat.name) || []);
+    } catch (error) {
+      console.error('Failed to fetch categories:', error);
+      // Fallback categories
+      setCategories(['electronics', 'clothing', 'home', 'books', 'sports', 'beauty', 'automotive', 'toys']);
+    }
+  };
 
   const fetchProducts = async () => {
     setLoading(true);
@@ -234,7 +254,10 @@ const Products: React.FC = () => {
               fullWidth
               placeholder="Search products..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1); // Reset to first page when searching
+              }}
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -251,13 +274,17 @@ const Products: React.FC = () => {
               <Select
                 value={filterCategory}
                 label="Category"
-                onChange={(e) => setFilterCategory(e.target.value)}
+                onChange={(e) => {
+                  setFilterCategory(e.target.value);
+                  setCurrentPage(1); // Reset to first page when filtering
+                }}
               >
                 <MenuItem value="">All Categories</MenuItem>
-                <MenuItem value="electronics">Electronics</MenuItem>
-                <MenuItem value="clothing">Clothing</MenuItem>
-                <MenuItem value="home">Home & Garden</MenuItem>
-                <MenuItem value="books">Books</MenuItem>
+                {categories.map((category) => (
+                  <MenuItem key={category} value={category}>
+                    {category.charAt(0).toUpperCase() + category.slice(1)}
+                  </MenuItem>
+                ))}
               </Select>
             </FormControl>
           </Grid>
@@ -267,13 +294,16 @@ const Products: React.FC = () => {
               <Select
                 value={sortBy}
                 label="Sort By"
-                onChange={(e) => setSortBy(e.target.value)}
+                onChange={(e) => {
+                  setSortBy(e.target.value);
+                  setCurrentPage(1); // Reset to first page when sorting
+                }}
               >
-                <MenuItem value="name">Name</MenuItem>
+                <MenuItem value="name">Name (A-Z)</MenuItem>
                 <MenuItem value="price_asc">Price: Low to High</MenuItem>
                 <MenuItem value="price_desc">Price: High to Low</MenuItem>
-                <MenuItem value="newest">Newest</MenuItem>
-                <MenuItem value="rating">Rating</MenuItem>
+                <MenuItem value="newest">Newest First</MenuItem>
+                <MenuItem value="rating">Best Rated</MenuItem>
               </Select>
             </FormControl>
           </Grid>

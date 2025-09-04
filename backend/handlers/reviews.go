@@ -27,6 +27,10 @@ type CreateReviewRequest struct {
 	Comment string `json:"comment" validate:"required,min=10"`
 }
 
+type CreateReplyRequest struct {
+	Comment string `json:"comment" validate:"required,min=5"`
+}
+
 type ReviewResponse struct {
 	ID         uint   `json:"id"`
 	UserID     uint   `json:"user_id"`
@@ -50,8 +54,8 @@ func (h *ReviewHandler) GetProductReviews(c *gin.Context) {
 	}
 
 	var reviews []models.Review
-	if err := h.db.Preload("User").
-		Where("product_id = ?", productID).
+	if err := h.db.Preload("User").Preload("Replies.User").
+		Where("product_id = ? AND parent_id IS NULL", productID).
 		Order("created_at DESC").
 		Find(&reviews).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch reviews"})
@@ -213,6 +217,71 @@ func (h *ReviewHandler) LikeReview(c *gin.Context) {
 	h.db.Model(&review).Update("likes_count", gorm.Expr("likes_count + 1"))
 
 	c.JSON(http.StatusOK, gin.H{"message": "Review liked"})
+}
+
+// ReplyToReview creates a reply to a review
+func (h *ReviewHandler) ReplyToReview(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+		return
+	}
+
+	reviewIDStr := c.Param("id")
+	reviewID, err := strconv.ParseUint(reviewIDStr, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid review ID"})
+		return
+	}
+
+	var req CreateReplyRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := h.validator.Struct(req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Check if review exists
+	var review models.Review
+	if err := h.db.First(&review, reviewID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Review not found"})
+		return
+	}
+
+	// Create reply as a new review with parent_id
+	reply := models.Review{
+		UserID:     userID.(uint),
+		ProductID:  review.ProductID,
+		Rating:     0, // Replies don't have ratings
+		Comment:    req.Comment,
+		ParentID:   &review.ID, // Set parent review ID
+		IsVerified: false,
+	}
+
+	if err := h.db.Create(&reply).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create reply"})
+		return
+	}
+
+	// Load user data for response
+	h.db.Preload("User").First(&reply, reply.ID)
+
+	c.JSON(http.StatusCreated, ReviewResponse{
+		ID:         reply.ID,
+		UserID:     reply.UserID,
+		User:       reply.User,
+		ProductID:  reply.ProductID,
+		Rating:     reply.Rating,
+		Comment:    reply.Comment,
+		IsVerified: reply.IsVerified,
+		LikesCount: reply.LikesCount,
+		CreatedAt:  reply.CreatedAt.Format("2006-01-02 15:04:05"),
+		UpdatedAt:  reply.UpdatedAt.Format("2006-01-02 15:04:05"),
+	})
 }
 
 // UpdateReview updates an existing review

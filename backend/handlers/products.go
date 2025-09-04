@@ -137,6 +137,7 @@ func (h *ProductHandler) GetProducts(c *gin.Context) {
 	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
 	category := c.Query("category")
 	search := c.Query("search")
+	sort := c.DefaultQuery("sort", "name")
 	status := c.DefaultQuery("status", "active")
 
 	offset := (page - 1) * limit
@@ -154,6 +155,24 @@ func (h *ProductHandler) GetProducts(c *gin.Context) {
 
 	if status != "" {
 		query = query.Where("status = ?", status)
+	}
+
+	// Add sorting
+	switch sort {
+	case "name":
+		query = query.Order("name ASC")
+	case "price_asc":
+		query = query.Order("price ASC")
+	case "price_desc":
+		query = query.Order("price DESC")
+	case "newest":
+		query = query.Order("created_at DESC")
+	case "rating":
+		// For now, order by name since we don't have ratings aggregated
+		// TODO: Implement proper rating calculation
+		query = query.Order("name ASC")
+	default:
+		query = query.Order("name ASC")
 	}
 
 	var total int64

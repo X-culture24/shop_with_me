@@ -150,6 +150,8 @@ type Review struct {
 	Comment    string    `json:"comment" validate:"required"`
 	IsVerified bool      `gorm:"default:false" json:"is_verified"`
 	LikesCount int       `gorm:"default:0" json:"likes_count"`
+	ParentID   *uint     `json:"parent_id,omitempty"` // For replies to reviews
+	Replies    []Review  `gorm:"foreignKey:ParentID" json:"replies,omitempty"`
 	CreatedAt  time.Time `json:"created_at"`
 	UpdatedAt  time.Time `json:"updated_at"`
 }
