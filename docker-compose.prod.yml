@@ -10,17 +10,17 @@ services:
       - DB_HOST=postgres
       - DB_PORT=5432
       - DB_USER=postgres
-      - DB_PASSWORD=${DB_PASSWORD:-sakifarm_secure_password}
+      - DB_PASSWORD=${DB_PASSWORD}
       - DB_NAME=sakifarm_ecommerce
-      - JWT_SECRET=${JWT_SECRET:-your-super-secret-jwt-key-change-in-production}
+      - JWT_SECRET=${JWT_SECRET}
       - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME}
       - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY}
       - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET}
       - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID}
       - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN}
       - TWILIO_PHONE_NUMBER=${TWILIO_PHONE_NUMBER}
-      - SMTP_HOST=${SMTP_HOST:-smtp.gmail.com}
-      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT}
       - SMTP_USERNAME=${SMTP_USERNAME}
       - SMTP_PASSWORD=${SMTP_PASSWORD}
       - MPESA_CONSUMER_KEY=${MPESA_CONSUMER_KEY}
@@ -30,18 +30,23 @@ services:
       - AIRTEL_CLIENT_ID=${AIRTEL_CLIENT_ID}
       - AIRTEL_CLIENT_SECRET=${AIRTEL_CLIENT_SECRET}
     volumes:
-      - ./backend/uploads:/root/uploads
+      - uploads_data:/root/uploads
     ports:
       - "8080:8080"
     restart: unless-stopped
+    networks:
+      - app-network
 
   frontend:
     build: ./frontend
     ports:
       - "80:80"
+      - "443:443"
     depends_on:
       - backend
     restart: unless-stopped
+    networks:
+      - app-network
 
   postgres:
     image: postgres:15-alpine
@@ -49,7 +54,7 @@ services:
     environment:
       POSTGRES_DB: sakifarm_ecommerce
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-sakifarm_secure_password}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
@@ -59,6 +64,13 @@ services:
       timeout: 5s
       retries: 5
       interval: 10s
+    networks:
+      - app-network
 
 volumes:
   postgres_data:
+  uploads_data:
+
+networks:
+  app-network:
+    driver: bridge

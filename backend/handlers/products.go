@@ -148,7 +148,8 @@ func (h *ProductHandler) GetProducts(c *gin.Context) {
 	}
 
 	if search != "" {
-		query = query.Where("name ILIKE ? OR description ILIKE ?", "%"+search+"%", "%"+search+"%")
+		query = query.Where("name ILIKE ? OR description ILIKE ? OR brand ILIKE ? OR tags ILIKE ?", 
+			"%"+search+"%", "%"+search+"%", "%"+search+"%", "%"+search+"%")
 	}
 
 	if status != "" {
@@ -164,7 +165,10 @@ func (h *ProductHandler) GetProducts(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"products": products,
+		"products":    products,
+		"totalPages":  (total + int64(limit) - 1) / int64(limit),
+		"currentPage": page,
+		"total":       total,
 		"pagination": gin.H{
 			"page":  page,
 			"limit": limit,

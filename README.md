@@ -1,155 +1,246 @@
-Here's the complete, cleaned-up README content for you to copy and use on GitHub:
+# SakiFarm E-commerce Platform 🛒
 
-```markdown
-# SakiFarm E-commerce Platform
+A modern, full-stack e-commerce solution built with React/TypeScript frontend and Go backend, featuring M-Pesa/Airtel Money payments, admin dashboard, and comprehensive product management.
 
-A modern, full-stack e-commerce solution with React/TypeScript frontend and Go backend.
+## ✨ Features
+
+### 🛍️ Customer Features
+- **Authentication**: Secure login/register with JWT + OTP verification
+- **Product Catalog**: Browse products with advanced search, filtering, and pagination
+- **Shopping Cart**: Add/remove items, quantity management, delivery fee calculation
+- **Checkout**: Multiple payment options (M-Pesa, Airtel Money, Card, Cash)
+- **Order Tracking**: Real-time order status updates and PDF receipts
+- **User Profile**: Account management and order history
+
+### 👨‍💼 Admin Features
+- **Product Management**: CRUD operations with image uploads
+- **Order Management**: Process orders, update status, generate reports
+- **User Management**: View and manage customer accounts
+- **Analytics Dashboard**: Sales statistics and performance metrics
+- **Inventory Control**: Stock management with low-stock alerts
+- **Payment Processing**: Handle M-Pesa/Airtel Money transactions
+
+### 💰 Payment Integration
+- **M-Pesa**: Safaricom Daraja API integration
+- **Airtel Money**: Airtel payment gateway
+- **Card Payments**: Secure card processing
+- **Cash/Insurance**: Alternative payment methods
 
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js 18+ & npm 9+
-- Go 1.19+
-- PostgreSQL 14+
-- Git
+- **Node.js** 18+ & npm
+- **Go** 1.22+
+- **PostgreSQL** 15+
+- **Docker** (optional but recommended)
 
-### Installation
+### 🐳 Docker Setup (Recommended)
 
-1. **Clone the repository**
+1. **Clone and setup**
    ```bash
-   git clone <repository-url>
-   cd shop
-   ```
-
-2. **Set up backend**
-   ```bash
-   cd shop_with_me/backend
+   git clone <your-repo-url>
+   cd shop_with_me
    cp .env.example .env
    # Edit .env with your configuration
+   ```
+
+2. **Start with Docker**
+   ```bash
+   chmod +x deploy.sh
+   ./deploy.sh
+   ```
+
+3. **Access the application**
+   - Frontend: http://localhost
+   - Backend API: http://localhost:8080/api
+   - Admin: admin@sakifarm.com / admin123
+
+### 🔧 Manual Setup
+
+1. **Backend Setup**
+   ```bash
+   cd backend
    go mod download
-   ```
-
-3. **Set up frontend**
-   ```bash
-   cd ../frontend
-   cp .env.example .env
-   # Edit .env with your configuration
-   npm install
-   ```
-
-4. **Start the application**
-   ```bash
-   # In backend directory
    go run main.go
-   
-   # In frontend directory (new terminal)
-   npm run dev
    ```
 
-## 🌟 Key Features
+2. **Frontend Setup**
+   ```bash
+   cd frontend
+   npm install
+   npm start
+   ```
 
-### User Features
-- Secure authentication (Email/Password + OTP)
-- Product browsing with search & filters
-- Shopping cart & wishlist
-- Secure checkout with M-Pesa/Airtel Money
-- Order tracking & PDF receipts
+3. **Database Setup**
+   ```bash
+   # Start PostgreSQL and create database
+   createdb sakifarm_ecommerce
+   ```
 
-### Admin Features
-- Product management (CRUD)
-- Order processing
-- User management
-- Sales analytics
-
-## 🛠 Tech Stack
+## 🛠️ Tech Stack
 
 ### Frontend
-- React 18 + TypeScript
-- Material-UI (MUI) v5
-- React Router v6
-- Vite
-- Axios
+- **React 18** with TypeScript
+- **Material-UI (MUI)** for UI components
+- **React Router** for navigation
+- **Axios** for API calls
+- **Framer Motion** for animations
+- **React Toastify** for notifications
 
 ### Backend
-- Go 1.19+
-- Gin Web Framework
-- GORM
-- JWT Authentication
-- PostgreSQL
+- **Go 1.22** with Gin framework
+- **GORM** for database ORM
+- **JWT** for authentication
+- **PostgreSQL** database
+- **Cloudinary** for image storage
+- **Twilio** for SMS/OTP
 
-## 🏗️ Infrastructure
-
-- **Docker** for containerization
-- **Terraform** for infrastructure as code
-- **Ansible** for configuration management
-- **Jenkins** for CI/CD pipeline
-- **Vagrant** for development environment
+### Infrastructure
+- **Docker & Docker Compose**
+- **Nginx** for production serving
+- **Digital Ocean** deployment ready
+- **SSL/TLS** support
 
 ## 📁 Project Structure
 
 ```
-shop/
-├── shop_with_me/                 # Main application
-│   ├── frontend/                 # React TypeScript application
-│   │   ├── public/              # Static assets
-│   │   ├── src/                 # Source code
-│   │   │   ├── components/      # Reusable UI components
-│   │   │   ├── pages/           # Page components
-│   │   │   ├── services/        # API services
-│   │   │   └── utils/           # Utility functions
-│   │   └── package.json
-│   │
-│   └── backend/                 # Go backend
-│       ├── cmd/                # Application entry points
-│       ├── internal/           # Private application code
-│       │   ├── config/        # Configuration
-│       │   ├── handlers/      # HTTP handlers
-│       │   ├── middleware/    # HTTP middleware
-│       │   ├── models/        # Database models
-│       │   └── services/      # Business logic
-│       └── go.mod
+shop_with_me/
+├── backend/                    # Go backend
+│   ├── config/                # Configuration
+│   ├── handlers/              # HTTP handlers
+│   ├── middleware/            # Middleware
+│   ├── models/                # Database models
+│   ├── services/              # Business logic
+│   ├── uploads/               # File uploads
+│   └── main.go               # Entry point
 │
-├── infrastructure/             # Infrastructure as Code
-│   ├── ansible/               # Ansible playbooks
-│   ├── terraform/             # Terraform configurations
-│   └── scripts/               # Deployment scripts
+├── frontend/                  # React frontend
+│   ├── public/               # Static assets
+│   ├── src/
+│   │   ├── components/       # UI components
+│   │   ├── contexts/         # React contexts
+│   │   ├── pages/            # Page components
+│   │   ├── services/         # API services
+│   │   └── types/            # TypeScript types
+│   └── nginx.conf            # Production config
 │
-└── docs/                      # Documentation
-    ├── API.md
-    ├── DEPLOYMENT.md
-    └── DEVELOPMENT.md
+├── infrastructure/           # DevOps
+│   ├── ansible/             # Configuration management
+│   ├── terraform/           # Infrastructure as code
+│   └── scripts/             # Deployment scripts
+│
+├── docker-compose.yml       # Development
+├── docker-compose.prod.yml  # Production
+├── deploy.sh               # Deployment script
+└── DIGITAL_OCEAN_DEPLOYMENT.md
 ```
 
-## 🚀 Deployment
+## 🌐 Deployment
 
-### Docker (Recommended)
+### Digital Ocean Deployment
+
+1. **Create Droplet** (Ubuntu 22.04, 2GB RAM minimum)
+2. **Follow the guide**: [DIGITAL_OCEAN_DEPLOYMENT.md](DIGITAL_OCEAN_DEPLOYMENT.md)
+3. **One-click deploy**:
+   ```bash
+   ./deploy.sh prod
+   ```
+
+### Environment Variables
+
+Create `.env` file with:
 ```bash
-docker-compose up --build
+# Required
+DB_PASSWORD=your_secure_password
+JWT_SECRET=your_jwt_secret
+
+# Optional (for full functionality)
+CLOUDINARY_CLOUD_NAME=your_cloudinary_name
+TWILIO_ACCOUNT_SID=your_twilio_sid
+MPESA_CONSUMER_KEY=your_mpesa_key
+# ... see .env.example for all options
 ```
 
-### Manual Deployment
-1. Build frontend:
-   ```bash
-   cd frontend
-   npm run build
-   ```
+## 🧪 Testing
 
-2. Run backend:
-   ```bash
-   cd ../backend
-   go build
-   ./backend
-   ```
+```bash
+# Backend tests
+cd backend
+go test ./...
 
-## 📚 Documentation
-
-- [API Documentation](/docs/API.md)
-- [Deployment Guide](/docs/DEPLOYMENT.md)
-- [Development Setup](/docs/DEVELOPMENT.md)
-
-## 📝 License
-
-MIT
+# Frontend tests
+cd frontend
+npm test
 ```
 
-You can now copy this content and use it in your GitHub repository. The README is well-structured, includes all necessary information, and follows best practices for open-source project documentation.
+## 📊 API Documentation
+
+### Authentication
+- `POST /api/auth/register` - User registration
+- `POST /api/auth/login` - User login
+- `POST /api/auth/verify-otp` - OTP verification
+
+### Products
+- `GET /api/products` - List products (with search/filter)
+- `GET /api/products/:id` - Get product details
+- `POST /api/admin/products` - Create product (admin)
+
+### Cart & Orders
+- `GET /api/cart` - Get user cart
+- `POST /api/cart/add` - Add to cart
+- `POST /api/orders` - Create order
+- `GET /api/orders` - Get user orders
+
+### Payments
+- `POST /api/payments/mpesa` - M-Pesa payment
+- `POST /api/payments/airtel` - Airtel Money payment
+
+## 🔒 Security Features
+
+- JWT token authentication
+- Password hashing with bcrypt
+- Input validation and sanitization
+- CORS protection
+- Rate limiting
+- SQL injection prevention
+- XSS protection
+
+## 🚀 Performance Features
+
+- Database connection pooling
+- Image optimization
+- Lazy loading
+- Pagination
+- Caching strategies
+- CDN ready
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing-feature`)
+5. Open Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🆘 Support
+
+- **Issues**: [GitHub Issues](https://github.com/yourusername/shop_with_me/issues)
+- **Documentation**: [Wiki](https://github.com/yourusername/shop_with_me/wiki)
+- **Email**: support@sakifarm.com
+
+## 🎯 Roadmap
+
+- [ ] Mobile app (React Native)
+- [ ] Advanced analytics
+- [ ] Multi-vendor support
+- [ ] Inventory forecasting
+- [ ] Social media integration
+- [ ] Advanced search with AI
+
+---
+
+**Built with ❤️ for modern e-commerce**
