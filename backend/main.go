@@ -59,6 +59,7 @@ func main() {
 	adminProductHandler := handlers.NewAdminProductHandler(db)
 	adminDashboardHandler := handlers.NewAdminDashboardHandler(db)
 	reviewHandler := handlers.NewReviewHandler(db)
+	cartHandler := handlers.NewCartHandler(db)
 	
 	// Create payment handler config
 	paymentConfig := &handlers.Config{
@@ -82,6 +83,9 @@ func main() {
 	// Apply middleware
 	r.Use(middleware.CORSMiddleware())
 	r.Use(middleware.SecurityMiddleware())
+
+	// Serve static files (uploaded images)
+	r.Static("/uploads", "./uploads")
 
 	// Health check
 	r.GET("/api/health", func(c *gin.Context) {
@@ -159,6 +163,16 @@ func main() {
 		reviewActions := protected.Group("/reviews")
 		{
 			reviewActions.POST("/:id/like", reviewHandler.LikeReview)
+		}
+
+		// Cart routes
+		cart := protected.Group("/cart")
+		{
+			cart.GET("", cartHandler.GetCart)
+			cart.POST("/add", cartHandler.AddToCart)
+			cart.PUT("/items/:id", cartHandler.UpdateCartItem)
+			cart.DELETE("/items/:id", cartHandler.RemoveFromCart)
+			cart.DELETE("/clear", cartHandler.ClearCart)
 		}
 	}
 

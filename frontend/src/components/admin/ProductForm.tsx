@@ -229,7 +229,7 @@ const ProductForm: React.FC<ProductFormProps> = ({
         method,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
         },
         body: JSON.stringify(formData),
       });

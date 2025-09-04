@@ -1,8 +1,10 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Product, CartItem } from '../types';
+import { toast } from 'react-toastify';
 
 interface CartContextType {
   cartItems: CartItem[];
+  loading: boolean;
   addToCart: (product: Product, quantity?: number) => void;
   removeFromCart: (productId: number) => void;
   updateQuantity: (productId: number, quantity: number) => void;
@@ -28,71 +30,160 @@ interface CartProviderProps {
 
 export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  // Load cart from localStorage on mount
+  // Load cart from backend on mount
   useEffect(() => {
-    const savedCart = localStorage.getItem('cart');
-    if (savedCart) {
-      try {
-        setCartItems(JSON.parse(savedCart));
-      } catch (error) {
-        console.error('Error loading cart from localStorage:', error);
-      }
-    }
+    fetchCart();
   }, []);
 
-  // Save cart to localStorage whenever it changes
-  useEffect(() => {
-    localStorage.setItem('cart', JSON.stringify(cartItems));
-  }, [cartItems]);
+  const fetchCart = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
 
-  const addToCart = (product: Product, quantity: number = 1) => {
-    setCartItems(prev => {
-      const existingItem = prev.find(item => item.product.id === product.id);
-      
-      if (existingItem) {
-        // Update quantity if item already exists
-        return prev.map(item =>
-          item.product.id === product.id
-            ? { ...item, quantity: item.quantity + quantity }
-            : item
-        );
-      } else {
-        // Add new item to cart
-        const newItem: CartItem = {
-          id: Date.now(), // Simple ID generation
-          product,
-          quantity,
-          price: product.price,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        };
-        return [...prev, newItem];
+    try {
+      const response = await fetch('/api/cart', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const cartData = await response.json();
+        setCartItems(cartData.items || []);
       }
-    });
+    } catch (error) {
+      console.error('Error fetching cart:', error);
+    }
   };
 
-  const removeFromCart = (productId: number) => {
-    setCartItems(prev => prev.filter(item => item.product.id !== productId));
+  const addToCart = async (product: Product, quantity: number = 1) => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      toast.error('Please login to add items to cart');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await fetch('/api/cart/add', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          product_id: product.id,
+          quantity,
+        }),
+      });
+
+      if (response.ok) {
+        await fetchCart(); // Refresh cart
+        toast.success('Item added to cart!');
+      } else {
+        const error = await response.json();
+        toast.error(error.error || 'Failed to add item to cart');
+      }
+    } catch (error) {
+      toast.error('Network error. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const updateQuantity = (productId: number, quantity: number) => {
+  const removeFromCart = async (productId: number) => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    const cartItem = cartItems.find(item => item.product.id === productId);
+    if (!cartItem) return;
+
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/cart/items/${cartItem.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        await fetchCart(); // Refresh cart
+        toast.success('Item removed from cart');
+      } else {
+        toast.error('Failed to remove item');
+      }
+    } catch (error) {
+      toast.error('Network error. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateQuantity = async (productId: number, quantity: number) => {
     if (quantity < 1) {
       removeFromCart(productId);
       return;
     }
-    
-    setCartItems(prev =>
-      prev.map(item =>
-        item.product.id === productId
-          ? { ...item, quantity, updated_at: new Date().toISOString() }
-          : item
-      )
-    );
+
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    const cartItem = cartItems.find(item => item.product.id === productId);
+    if (!cartItem) return;
+
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/cart/items/${cartItem.id}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ quantity }),
+      });
+
+      if (response.ok) {
+        await fetchCart(); // Refresh cart
+      } else {
+        const error = await response.json();
+        toast.error(error.error || 'Failed to update quantity');
+      }
+    } catch (error) {
+      toast.error('Network error. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const clearCart = () => {
-    setCartItems([]);
+  const clearCart = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    setLoading(true);
+    try {
+      const response = await fetch('/api/cart/clear', {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        setCartItems([]);
+        toast.success('Cart cleared');
+      } else {
+        toast.error('Failed to clear cart');
+      }
+    } catch (error) {
+      toast.error('Network error. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const getCartTotal = () => {
@@ -114,6 +205,7 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
 
   const value: CartContextType = {
     cartItems,
+    loading,
     addToCart,
     removeFromCart,
     updateQuantity,

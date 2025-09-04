@@ -31,7 +31,7 @@ const AdminLogin: React.FC = () => {
     setError('');
 
     try {
-      const response = await fetch('/api/admin/login', {
+      const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -42,10 +42,15 @@ const AdminLogin: React.FC = () => {
       const data = await response.json();
 
       if (response.ok) {
-        localStorage.setItem('adminToken', data.token);
-        localStorage.setItem('adminUser', JSON.stringify(data.user));
-        toast.success('Welcome to Admin Dashboard!');
-        navigate('/admin/dashboard');
+        // Check if user has admin role
+        if (data.user && data.user.role === 'admin') {
+          localStorage.setItem('adminToken', data.token);
+          localStorage.setItem('adminUser', JSON.stringify(data.user));
+          toast.success('Welcome to Admin Dashboard!');
+          navigate('/admin/dashboard');
+        } else {
+          setError('Access denied. Admin privileges required.');
+        }
       } else {
         setError(data.message || 'Invalid credentials');
       }

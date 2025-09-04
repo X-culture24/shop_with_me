@@ -1,9 +1,13 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -271,9 +275,26 @@ func (h *AdminProductHandler) UploadProductImage(c *gin.Context) {
 		return
 	}
 	
-	// Here you would typically upload to a cloud storage service like Cloudinary
-	// For now, we'll return a placeholder URL
-	imageURL := "https://via.placeholder.com/400x400?text=Product+Image"
+	// Create uploads directory if it doesn't exist
+	uploadsDir := "uploads"
+	if err := os.MkdirAll(uploadsDir, 0755); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create uploads directory"})
+		return
+	}
+	
+	// Generate unique filename
+	ext := filepath.Ext(file.Filename)
+	filename := fmt.Sprintf("%d_%s%s", time.Now().Unix(), strings.ReplaceAll(file.Filename, ext, ""), ext)
+	filepath := filepath.Join(uploadsDir, filename)
+	
+	// Save the uploaded file
+	if err := c.SaveUploadedFile(file, filepath); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save image"})
+		return
+	}
+	
+	// Return the URL path for the uploaded image
+	imageURL := fmt.Sprintf("/uploads/%s", filename)
 	
 	c.JSON(http.StatusOK, gin.H{
 		"imageUrl": imageURL,
